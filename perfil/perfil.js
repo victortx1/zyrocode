@@ -1057,7 +1057,7 @@ if (btnConfigTop) {
 }
 
 async function shareApp() {
-  const appUrl = `${window.location.origin}${window.location.pathname.replace(/\/perfil\/perfil\.html$/, "/index/index.html")}`;
+  const appUrl = `${window.location.origin}${window.location.pathname.replace(/\/perfil\/perfil\.html$/, "/index.html")}`;
   const shareData = {
     title: "ZYRO CODE",
     text: "Aprenda programação jogando no ZYRO CODE.",

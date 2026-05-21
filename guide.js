@@ -1,4 +1,4 @@
-  import { auth, db } from "./firebase.js";
+import { auth, db } from "./firebase.js";
 
 import {
   onAuthStateChanged
@@ -14,7 +14,7 @@ import {
 const GUIDE_STEPS = [
   {
     step: 1,
-    page: "index/index.html",
+    page: "index.html",
     title: "Lobby / Mapa",
     text: "Aqui ficam suas aulas e módulos. Use esta área para começar pelo primeiro módulo e avançar nas fases.",
     target: "#phaseMap",
@@ -60,7 +60,7 @@ const GUIDE_STEPS = [
   },
   {
     step: 6,
-    page: "index/index.html",
+    page: "index.html",
     title: "Voltar aos estudos",
     text: "Agora volte ao Módulo 1 e comece sua primeira aula. Clique em começar agora para iniciar.",
     target: "#phaseMap",
@@ -81,8 +81,7 @@ const guideState = {
 
 function getCurrentPagePath() {
   const path = window.location.pathname.replace(/\\/g, "/");
-  const normalized = path.substring(path.lastIndexOf("/") - 12);
-  if (path.endsWith("/index/index.html")) return "index/index.html";
+  if (path.endsWith("/index.html") || path.endsWith("/")) return "index.html";
   if (path.endsWith("/missoes/missoes.html")) return "missoes/missoes.html";
   if (path.endsWith("/ranking/ranking.html")) return "ranking/ranking.html";
   if (path.endsWith("/loja/loja.html")) return "loja/loja.html";
@@ -218,7 +217,7 @@ async function completeGuide() {
 }
 
 function getRelativePathForStep(step) {
-  return `../${step.page}`;
+  return `./${step.page}`;
 }
 
 async function goToStep(stepNumber) {

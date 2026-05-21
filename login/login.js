@@ -67,7 +67,7 @@ async function verificarOnboardingERotear(user) {
       return;
     }
 
-    window.location.href = "../index/index.html";
+    window.location.href = "../index.html";
   } catch (error) {
     console.error("Erro ao verificar onboarding:", error);
     alert("Erro ao verificar status. Tente novamente.");
@@ -98,7 +98,7 @@ if (btnGuest) {
   btnGuest.addEventListener("click", () => {
     localStorage.setItem("zyroGuest", "true");
     localStorage.setItem("zyroUserName", "Visitante");
-    window.location.href = "../index/index.html";
+    window.location.href = "../index.html";
   });
 }
 

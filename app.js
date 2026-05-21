@@ -1,5 +1,5 @@
 // app.js - Lobby principal, módulos/cursos e motor de aulas
-import { auth, db } from "../firebase.js";
+import { auth, db } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   doc,
@@ -502,7 +502,7 @@ onAuthStateChanged(auth, async (user) => {
   const isGuest = localStorage.getItem("zyroGuest") === "true";
 
   if (!user && !isGuest) {
-    window.location.href = "../login/login.html";
+    window.location.href = "./login/login.html";
     return;
   }
 
@@ -525,7 +525,7 @@ onAuthStateChanged(auth, async (user) => {
   } else {
     const snap = await getDoc(doc(db, "users", user.uid));
     if (!snap.exists()) {
-      window.location.href = "../login/login.html";
+      window.location.href = "./login/login.html";
       return;
     }
     userData = { ...snap.data(), uid: user.uid };
@@ -544,7 +544,7 @@ function renderUI() {
   const userAvatar = document.getElementById("userAvatar");
   if (userAvatar) {
     userAvatar.src = userData.foto || userData.photoURL || "";
-    userAvatar.addEventListener("click", () => window.location.href = "../perfil/perfil.html");
+    userAvatar.addEventListener("click", () => window.location.href = "./perfil/perfil.html");
   }
 
   const xpAtual = userData.xp || 0;
