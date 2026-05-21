@@ -2,8 +2,6 @@ import { auth, db, provider } from "../firebase.js";
 
 import {
   signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
   onAuthStateChanged,
   signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -137,35 +135,7 @@ function handleAuthError(e) {
   }
 }
 
-// Processa resultado de redirect (quando o login foi via signInWithRedirect)
-console.log('[login] Chamando getRedirectResult() para checar retorno de redirect...');
-(async () => {
-  try {
-    const result = await getRedirectResult(auth);
-    console.log('[login] getRedirectResult() retornou:', result);
-    if (result && result.user) {
-      console.log('[login] Usuário retornou via redirect:', result.user);
-      try {
-        await criarPerfil(result.user);
-        console.log('[login] Perfil criado/atualizado via redirect. Redirecionando...');
-        try { alert('Login Google feito, entrando no app'); } catch(e){}
-        showStatus('Login feito, entrando...');
-        // forçar redirecionamento direto para index.html
-        window.location.href = '../index.html';
-        return;
-      } catch (err) {
-        console.error("Erro ao processar redirect result:", err && err.code ? err.code : err, err && err.message ? err.message : err, err && err.stack ? err.stack : 'no-stack');
-        try { alert((err && err.code ? err.code : '') + ' - ' + (err && err.message ? err.message : '')); } catch(e){}
-      }
-    } else {
-      console.log('[login] getRedirectResult: sem usuário no resultado.');
-    }
-  } catch (e) {
-    console.error('[login] getRedirectResult() falhou:', e && e.code ? e.code : e, e && e.message ? e.message : e, e && e.stack ? e.stack : 'no-stack');
-    try { alert((e && e.code ? e.code : '') + ' - ' + (e && e.message ? e.message : '')); } catch(err){}
-    handleAuthError(e);
-  }
-})();
+// Usamos somente signInWithPopup para login (desktop e mobile)
 
 if (btnGoogle) {
   btnGoogle.addEventListener("click", async (ev) => {
@@ -175,36 +145,20 @@ if (btnGoogle) {
       localStorage.removeItem("zyroGuest");
       localStorage.removeItem("zyroUserName");
 
-      const mobile = isMobile();
-      console.log('[login] isMobile =>', mobile, ' userAgent:', navigator.userAgent);
-
-      if (mobile) {
-        console.log('[login] Iniciando signInWithRedirect (mobile)...');
-        try {
-          await signInWithRedirect(auth, provider);
-          console.log('[login] signInWithRedirect chamado com sucesso; aguardando retorno.');
-        } catch (err) {
-          console.error('[login] Erro ao chamar signInWithRedirect:', err && err.code ? err.code : err, err && err.message ? err.message : err, err && err.stack ? err.stack : 'no-stack');
-          handleAuthError(err);
-          try { alert((err && err.code ? err.code : '') + ' - ' + (err && err.message ? err.message : '')); } catch(e){}
-        }
-        return;
-      }
-
-      console.log('[login] Iniciando signInWithPopup (desktop)...');
+      console.log('[login] Iniciando signInWithPopup (desktop/mobile)...');
       try {
         const result = await signInWithPopup(auth, provider);
         console.log('[login] signInWithPopup resultado:', result);
         if (result && result.user) {
           try { showStatus('Login feito, entrando...'); } catch(e){}
           await criarPerfil(result.user);
+          try { alert('Login Google feito, entrando no app'); } catch(e){}
           // Forçar redirecionamento direto
           window.location.href = '../index.html';
           return;
         }
       } catch (err) {
         console.error('[login] Erro signInWithPopup:', err && err.code ? err.code : err, err && err.message ? err.message : err, err && err.stack ? err.stack : 'no-stack');
-        handleAuthError(err);
         try { alert((err && err.code ? err.code : '') + ' - ' + (err && err.message ? err.message : '')); } catch(e){}
       }
     } catch (e) {
