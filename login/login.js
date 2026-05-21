@@ -87,6 +87,8 @@ console.log('[login] login.js carregado', {
   location: window.location.href
 });
 
+let redirectProcessed = false; // evita processar o retorno do redirect mais de uma vez
+
 function isMobile() {
   if (typeof navigator === "undefined") return false;
   return /Mobi|Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
@@ -118,9 +120,11 @@ console.log('[login] Chamando getRedirectResult() para checar retorno de redirec
 getRedirectResult(auth).then(async (result) => {
   console.log('[login] getRedirectResult() retornou:', result);
   if (result && result.user) {
+    redirectProcessed = true;
     console.log('[login] Usuário retornou via redirect:', result.user);
     try {
       await criarPerfil(result.user);
+      console.log('[login] Perfil criado/atualizado via redirect. Redirecionando...');
       await verificarOnboardingERotear(result.user);
     } catch (err) {
       console.error("Erro ao processar redirect result:", err && err.code ? err.code : err, err && err.message ? err.message : err, err && err.stack ? err.stack : 'no-stack');
@@ -206,8 +210,18 @@ onAuthStateChanged(auth, async (user) => {
 
     if (user) {
       console.log('[login] Usuário autenticado via onAuthStateChanged:', user);
-      await criarPerfil(user);
-      await verificarOnboardingERotear(user);
+      // Se já processamos o redirect result, não precisamos duplicar ações.
+      if (redirectProcessed) {
+        console.log('[login] Redirect já processado; pulando duplicate handling.');
+        return;
+      }
+      try {
+        await criarPerfil(user);
+        console.log('[login] Perfil criado/atualizado via onAuthStateChanged. Redirecionando...');
+        await verificarOnboardingERotear(user);
+      } catch (err) {
+        console.error('[login] Erro ao processar usuário em onAuthStateChanged:', err && err.code ? err.code : err, err && err.message ? err.message : err, err && err.stack ? err.stack : 'no-stack');
+      }
     } else {
       console.log('[login] onAuthStateChanged: nenhum usuário autenticado.');
     }
