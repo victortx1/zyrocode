@@ -18,8 +18,19 @@ const firebaseConfig = {
   appId: "1:615037544944:web:a0ca942a980cb641cb5535"
 };
 
-const app = initializeApp(firebaseConfig);
+let app = null;
+try {
+  console.log("[firebase] Inicializando Firebase com authDomain:", firebaseConfig.authDomain);
+  app = initializeApp(firebaseConfig);
+  console.log("[firebase] Firebase inicializado com sucesso.");
+} catch (e) {
+  console.error("[firebase] Erro ao inicializar Firebase:", e && e.code ? e.code : e, e && e.message ? e.message : e, e && e.stack ? e.stack : "no-stack");
+  throw e;
+}
 
 export const auth = getAuth(app);
+console.log("[firebase] Auth instanciado:", !!auth);
 export const db = getFirestore(app);
+console.log("[firebase] Firestore instanciado:", !!db);
 export const provider = new GoogleAuthProvider();
+console.log("[firebase] GoogleAuthProvider criado.");

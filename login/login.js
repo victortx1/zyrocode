@@ -80,13 +80,20 @@ const btnGoogle = document.getElementById("btnGoogle");
 const btnGuest = document.getElementById("btnGuest");
 const btnLogout = document.getElementById("btnLogout");
 
+console.log('[login] login.js carregado', {
+  auth: !!auth,
+  db: !!db,
+  provider: !!provider,
+  location: window.location.href
+});
+
 function isMobile() {
   if (typeof navigator === "undefined") return false;
   return /Mobi|Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
 }
 
 function handleAuthError(e) {
-  console.error("Firebase Auth error:", e && e.code ? e.code : e, e && e.message ? e.message : e);
+  console.error("Firebase Auth error:", e && e.code ? e.code : e, e && e.message ? e.message : e, e && e.stack ? e.stack : "no-stack");
   if (!e || !e.code) return;
   switch (e.code) {
     case "auth/unauthorized-domain":
@@ -107,41 +114,64 @@ function handleAuthError(e) {
 }
 
 // Processa resultado de redirect (quando o login foi via signInWithRedirect)
+console.log('[login] Chamando getRedirectResult() para checar retorno de redirect...');
 getRedirectResult(auth).then(async (result) => {
+  console.log('[login] getRedirectResult() retornou:', result);
   if (result && result.user) {
+    console.log('[login] Usuário retornou via redirect:', result.user);
     try {
       await criarPerfil(result.user);
       await verificarOnboardingERotear(result.user);
     } catch (err) {
-      console.error("Erro ao processar redirect result:", err);
+      console.error("Erro ao processar redirect result:", err && err.code ? err.code : err, err && err.message ? err.message : err, err && err.stack ? err.stack : 'no-stack');
     }
+  } else {
+    console.log('[login] getRedirectResult: sem usuário no resultado.');
   }
 }).catch((e) => {
+  console.error('[login] getRedirectResult() falhou:', e && e.code ? e.code : e, e && e.message ? e.message : e, e && e.stack ? e.stack : 'no-stack');
   handleAuthError(e);
 });
 
 if (btnGoogle) {
   btnGoogle.addEventListener("click", async () => {
+    console.log('[login] btnGoogle click detectado');
     try {
       localStorage.removeItem("zyroGuest");
       localStorage.removeItem("zyroUserName");
 
-      if (isMobile()) {
-        // Mobile: usar redirect (mais compatível com navegadores móveis e WebView)
-        await signInWithRedirect(auth, provider);
-        // Não há resultado imediato aqui; a página será recarregada e getRedirectResult() acima cuidará do restante.
+      const mobile = isMobile();
+      console.log('[login] isMobile =>', mobile, ' userAgent:', navigator.userAgent);
+
+      if (mobile) {
+        console.log('[login] Iniciando signInWithRedirect (mobile)...');
+        try {
+          await signInWithRedirect(auth, provider);
+          console.log('[login] signInWithRedirect chamado com sucesso; aguardando retorno.');
+        } catch (err) {
+          console.error('[login] Erro ao chamar signInWithRedirect:', err && err.code ? err.code : err, err && err.message ? err.message : err, err && err.stack ? err.stack : 'no-stack');
+          handleAuthError(err);
+          alert('Erro ao iniciar login por redirect: ' + (err && err.message ? err.message : err));
+        }
         return;
       }
 
-      // Desktop: manter o comportamento com popup
-      const result = await signInWithPopup(auth, provider);
-      if (result && result.user) {
-        await criarPerfil(result.user);
-        await verificarOnboardingERotear(result.user);
+      console.log('[login] Iniciando signInWithPopup (desktop)...');
+      try {
+        const result = await signInWithPopup(auth, provider);
+        console.log('[login] signInWithPopup resultado:', result);
+        if (result && result.user) {
+          await criarPerfil(result.user);
+          await verificarOnboardingERotear(result.user);
+        }
+      } catch (err) {
+        console.error('[login] Erro signInWithPopup:', err && err.code ? err.code : err, err && err.message ? err.message : err, err && err.stack ? err.stack : 'no-stack');
+        handleAuthError(err);
+        alert('Erro ao entrar com Google (popup): ' + (err && err.message ? err.message : err));
       }
     } catch (e) {
+      console.error('[login] Erro genérico no clique do login:', e && e.code ? e.code : e, e && e.message ? e.message : e, e && e.stack ? e.stack : 'no-stack');
       handleAuthError(e);
-      try { console.error("Erro no login Google:", e); } catch (er) {}
       alert("Erro ao entrar com Google: " + (e && e.message ? e.message : e));
     }
   });
@@ -165,12 +195,23 @@ if (btnLogout) {
 }
 
 onAuthStateChanged(auth, async (user) => {
-  const isGuest = localStorage.getItem("zyroGuest") === "true";
+  try {
+    console.log('[login] onAuthStateChanged fired, user:', user, 'auth.currentUser:', auth.currentUser);
+    const isGuest = localStorage.getItem("zyroGuest") === "true";
 
-  if (isGuest) return;
+    if (isGuest) {
+      console.log('[login] Usuário é guest, ignorando onAuthStateChanged.');
+      return;
+    }
 
-  if (user) {
-    await criarPerfil(user);
-    await verificarOnboardingERotear(user);
+    if (user) {
+      console.log('[login] Usuário autenticado via onAuthStateChanged:', user);
+      await criarPerfil(user);
+      await verificarOnboardingERotear(user);
+    } else {
+      console.log('[login] onAuthStateChanged: nenhum usuário autenticado.');
+    }
+  } catch (e) {
+    console.error('[login] Erro em onAuthStateChanged handler:', e && e.code ? e.code : e, e && e.message ? e.message : e, e && e.stack ? e.stack : 'no-stack');
   }
 });
