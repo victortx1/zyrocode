@@ -1,0 +1,124 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --settings-bg: #050505;
+  --settings-panel: #121212;
+  --settings-panel-2: #181818;
+  --settings-line: rgba(255, 255, 255, 0.08);
+  --settings-text: #ffffff;
+  --settings-muted: rgba(255, 255, 255, 0.52);
+  --settings-orange: #ff7b00;
+  --settings-danger: #ff5f5f;
+}
+
+html,
+body {
+  min-height: 100%;
+  background: var(--settings-bg);
+  color: var(--settings-text);
+  font-family: "DM Sans", sans-serif;
+}
+
+body {
+  background:
+    radial-gradient(circle at 50% -10%, rgba(255, 123, 0, 0.12), transparent 26%),
+    linear-gradient(180deg, #090909, #050505 48%, #020202);
+}
+
+.settings-page {
+  width: min(100%, 560px);
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 18px 16px 34px;
+}
+
+.settings-header {
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.settings-header h1 {
+  font-family: "Syne", sans-serif;
+  font-size: clamp(30px, 8vw, 42px);
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.done-btn {
+  border: 0;
+  background: transparent;
+  color: var(--settings-orange);
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+  padding: 10px 0 10px 14px;
+}
+
+.settings-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.settings-item {
+  width: 100%;
+  min-height: 58px;
+  border: 1px solid var(--settings-line);
+  border-radius: 8px;
+  background: linear-gradient(180deg, var(--settings-panel-2), var(--settings-panel));
+  color: var(--settings-text);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 16px;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.settings-item:hover {
+  border-color: rgba(255, 123, 0, 0.38);
+  background: rgba(255, 123, 0, 0.08);
+}
+
+.settings-item.danger {
+  color: var(--settings-danger);
+}
+
+.settings-arrow {
+  color: var(--settings-muted);
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.settings-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  width: min(92vw, 360px);
+  transform: translate(-50%, 20px);
+  border: 1px solid rgba(255, 123, 0, 0.32);
+  border-radius: 8px;
+  background: #111;
+  color: #fff;
+  padding: 13px 16px;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: 0.2s ease;
+}
+
+.settings-toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZYRO CODE - Configurações</title>
+
+  <link rel="stylesheet" href="../index/style.css" />
+  <link rel="stylesheet" href="configuracoes.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
+</head>
+
+<body>
+  <main class="settings-page">
+    <header class="settings-header">
+      <h1>Configurações</h1>
+      <button id="btnDone" class="done-btn">Pronto</button>
+    </header>
+
+    <section class="settings-list" aria-label="Lista de configurações">
+      <button class="settings-item" data-action="soon">
+        <span>Preferências</span>
+        <span class="settings-arrow">&gt;</span>
+      </button>
+
+      <button class="settings-item" data-action="profile">
+        <span>Perfil</span>
+        <span class="settings-arrow">&gt;</span>
+      </button>
+
+      <button class="settings-item" data-action="soon">
+        <span>Notificações</span>
+        <span class="settings-arrow">&gt;</span>
+      </button>
+
+      <button class="settings-item" data-action="soon">
+        <span>Cursos</span>
+        <span class="settings-arrow">&gt;</span>
+      </button>
+
+      <button class="settings-item" data-action="soon">
+        <span>Contas em redes sociais</span>
+        <span class="settings-arrow">&gt;</span>
+      </button>
+
+      <button class="settings-item" data-action="soon">
+        <span>Configurações de privacidade</span>
+        <span class="settings-arrow">&gt;</span>
+      </button>
+
+      <button class="settings-item" data-action="soon">
+        <span>Central de Ajuda</span>
+        <span class="settings-arrow">&gt;</span>
+      </button>
+
+      <button class="settings-item" data-action="feedback">
+        <span>Fazer comentários</span>
+        <span class="settings-arrow">&gt;</span>
+      </button>
+
+      <button class="settings-item danger" data-action="logout">
+        <span>Sair</span>
+        <span class="settings-arrow">&gt;</span>
+      </button>
+    </section>
+  </main>
+
+  <div id="settingsToast" class="settings-toast" role="status"></div>
+
+  <script type="module" src="configuracoes.js"></script>
+</body>
+</html>

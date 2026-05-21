@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="shortcut icon" href="../assets/fotos/favicon.png" type="image/png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZYRO CODE — Lobby</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="../guide.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+  
+  <header class="topbar">
+    <div class="topbar-brand">⚡ <span>ZYRO</span>CODE</div>
+
+    <div class="topbar-stats">
+      <div class="stat" id="statStreak">🔥 <span id="streakVal">0</span></div>
+      <div class="stat" id="statCoins">🪙 <span id="coinsVal">0</span></div>
+      <div class="stat" id="statHearts">❤️ <span id="heartsVal">5</span></div>
+    </div>
+  </header>
+
+  
+  <div class="xp-bar-wrap">
+    <div class="xp-label">
+      <span>Nível <span id="userNivel">1</span></span>
+      <span id="xpLabel">0 / 200 XP</span>
+    </div>
+    <div class="xp-track"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
+  </div>
+
+  
+  <main class="lobby">
+    <section class="learning-hero">
+      <div>
+        <span class="eyebrow">Cursos</span>
+        <h1>Módulos Zyro</h1>
+        <p>Escolha um módulo, avance pelos cursos e conclua as aulas com 5 respostas corretas.</p>
+      </div>
+    </section>
+
+    <div class="learning-breadcrumb" id="learningBreadcrumb"></div>
+
+    <div class="phase-map" id="phaseMap">
+    </div>
+  </main>
+
+  
+  <nav class="bottom-nav">
+    <a href="../index/index.html" class="nav-item active" id="navMap">
+      <span class="nav-icon">🗺️</span><span class="nav-label">Mapa</span>
+    </a>
+    <a href="../missoes/missoes.html" class="nav-item">
+      <span class="nav-icon">🎯</span><span class="nav-label">Missões</span>
+    </a>
+    <a href="../ranking/ranking.html" class="nav-item">
+      <span class="nav-icon">🏆</span><span class="nav-label">Ranking</span>
+    </a>
+    <a href="../loja/loja.html" class="nav-item">
+      <span class="nav-icon">🛒</span><span class="nav-label">Loja</span>
+    </a>
+    <a href="../perfil/perfil.html" class="nav-item">
+      <span class="nav-icon">👤</span><span class="nav-label">Perfil</span>
+    </a>
+  </nav>
+
+  
+  <div class="modal-overlay hidden" id="lessonModal">
+    <div class="modal-card" id="lessonContent">
+    </div>
+  </div>
+
+  
+  <div class="victory-screen hidden" id="victoryScreen">
+    <div class="victory-content">
+      <div class="victory-star">⭐</div>
+      <h2>Incrível!</h2>
+      <p id="victoryMsg">Você concluiu a aula!</p>
+      <div class="victory-rewards" id="victoryRewards"></div>
+      <button class="btn-primary" id="btnContinue">Continuar →</button>
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+  <script type="module" src="../guide.js"></script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZYRO CODE — Bem-vindo!</title>
+  <link rel="stylesheet" href="onboarding.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div class="onboarding-container">
+    <!-- PROGRESS BAR -->
+    <div class="onboarding-header">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="progress-text">
+        <span id="progressStep">1</span> de <span id="progressTotal">7</span>
+      </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="onboarding-content">
+      <!-- ROBOT ASSISTANT -->
+      <div class="robot-container">
+        <div class="robot">🤖</div>
+        <div class="robot-bubble" id="robotBubble">
+          Bem-vindo ao ZYRO CODE!
+        </div>
+      </div>
+
+      <!-- QUESTIONS CONTAINER -->
+      <div class="questions-wrapper">
+        <div class="question-card" id="questionCard">
+          <!-- Questions injected by JS -->
+        </div>
+      </div>
+
+      <!-- ACTION BUTTONS -->
+      <div class="action-buttons">
+        <button class="btn btn-secondary" id="btnPrev" style="display: none;">
+          ← Anterior
+        </button>
+        <button class="btn btn-primary" id="btnNext">
+          Próximo →
+        </button>
+      </div>
+    </div>
+
+    <!-- LOADING OVERLAY -->
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+      <div class="spinner"></div>
+      <p>Salvando seu perfil...</p>
+    </div>
+  </div>
+
+  <script type="module" src="onboarding.js"></script>
+</body>
+</html>
