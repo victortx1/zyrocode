@@ -2,6 +2,8 @@ import { auth, db, provider } from "../firebase.js";
 
 import {
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   onAuthStateChanged,
   signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -78,18 +80,69 @@ const btnGoogle = document.getElementById("btnGoogle");
 const btnGuest = document.getElementById("btnGuest");
 const btnLogout = document.getElementById("btnLogout");
 
+function isMobile() {
+  if (typeof navigator === "undefined") return false;
+  return /Mobi|Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+}
+
+function handleAuthError(e) {
+  console.error("Firebase Auth error:", e && e.code ? e.code : e, e && e.message ? e.message : e);
+  if (!e || !e.code) return;
+  switch (e.code) {
+    case "auth/unauthorized-domain":
+      console.error("Domínio não autorizado. Adicione 'https://victortx1.github.io' nas configurações do Firebase Authentication (Authorized domains).");
+      break;
+    case "auth/popup-blocked":
+      console.error("Popup bloqueado pelo navegador. Permita popups ou tente em modo desktop com signInWithPopup.");
+      break;
+    case "auth/popup-closed-by-user":
+      console.error("Popup fechado pelo usuário antes de concluir o login.");
+      break;
+    case "auth/network-request-failed":
+      console.error("Falha de rede. Verifique sua conexão e tente novamente.");
+      break;
+    default:
+      console.error(e);
+  }
+}
+
+// Processa resultado de redirect (quando o login foi via signInWithRedirect)
+getRedirectResult(auth).then(async (result) => {
+  if (result && result.user) {
+    try {
+      await criarPerfil(result.user);
+      await verificarOnboardingERotear(result.user);
+    } catch (err) {
+      console.error("Erro ao processar redirect result:", err);
+    }
+  }
+}).catch((e) => {
+  handleAuthError(e);
+});
+
 if (btnGoogle) {
   btnGoogle.addEventListener("click", async () => {
     try {
       localStorage.removeItem("zyroGuest");
       localStorage.removeItem("zyroUserName");
 
+      if (isMobile()) {
+        // Mobile: usar redirect (mais compatível com navegadores móveis e WebView)
+        await signInWithRedirect(auth, provider);
+        // Não há resultado imediato aqui; a página será recarregada e getRedirectResult() acima cuidará do restante.
+        return;
+      }
+
+      // Desktop: manter o comportamento com popup
       const result = await signInWithPopup(auth, provider);
-      await criarPerfil(result.user);
-      await verificarOnboardingERotear(result.user);
+      if (result && result.user) {
+        await criarPerfil(result.user);
+        await verificarOnboardingERotear(result.user);
+      }
     } catch (e) {
-      console.error("Erro no login Google:", e);
-      alert("Erro ao entrar com Google: " + e.message);
+      handleAuthError(e);
+      try { console.error("Erro no login Google:", e); } catch (er) {}
+      alert("Erro ao entrar com Google: " + (e && e.message ? e.message : e));
     }
   });
 }
