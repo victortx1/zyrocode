@@ -94,6 +94,30 @@ function isMobile() {
   return /Mobi|Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
 }
 
+function showStatus(msg) {
+  try {
+    let el = document.getElementById('loginStatus');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'loginStatus';
+      el.style.position = 'fixed';
+      el.style.left = '0';
+      el.style.right = '0';
+      el.style.top = '0';
+      el.style.padding = '12px';
+      el.style.background = 'rgba(0,0,0,0.85)';
+      el.style.color = '#fff';
+      el.style.textAlign = 'center';
+      el.style.zIndex = '9999';
+      el.style.fontSize = '16px';
+      document.body.appendChild(el);
+    }
+    el.textContent = msg;
+  } catch (e) {
+    console.log('[login] showStatus error', e);
+  }
+}
+
 function handleAuthError(e) {
   console.error("Firebase Auth error:", e && e.code ? e.code : e, e && e.message ? e.message : e, e && e.stack ? e.stack : "no-stack");
   if (!e || !e.code) return;
@@ -125,20 +149,26 @@ getRedirectResult(auth).then(async (result) => {
     try {
       await criarPerfil(result.user);
       console.log('[login] Perfil criado/atualizado via redirect. Redirecionando...');
-      await verificarOnboardingERotear(result.user);
+      showStatus('Login feito, entrando...');
+      // forçar redirecionamento direto para index.html
+      window.location.href = '../index.html';
+      return;
     } catch (err) {
       console.error("Erro ao processar redirect result:", err && err.code ? err.code : err, err && err.message ? err.message : err, err && err.stack ? err.stack : 'no-stack');
+      try { alert((err && err.code ? err.code : '') + ' - ' + (err && err.message ? err.message : '')); } catch(e){}
     }
   } else {
     console.log('[login] getRedirectResult: sem usuário no resultado.');
   }
 }).catch((e) => {
   console.error('[login] getRedirectResult() falhou:', e && e.code ? e.code : e, e && e.message ? e.message : e, e && e.stack ? e.stack : 'no-stack');
+  try { alert((e && e.code ? e.code : '') + ' - ' + (e && e.message ? e.message : '')); } catch(err){}
   handleAuthError(e);
 });
 
 if (btnGoogle) {
-  btnGoogle.addEventListener("click", async () => {
+  btnGoogle.addEventListener("click", async (ev) => {
+    if (ev && ev.preventDefault) ev.preventDefault();
     console.log('[login] btnGoogle click detectado');
     try {
       localStorage.removeItem("zyroGuest");
@@ -155,7 +185,7 @@ if (btnGoogle) {
         } catch (err) {
           console.error('[login] Erro ao chamar signInWithRedirect:', err && err.code ? err.code : err, err && err.message ? err.message : err, err && err.stack ? err.stack : 'no-stack');
           handleAuthError(err);
-          alert('Erro ao iniciar login por redirect: ' + (err && err.message ? err.message : err));
+          try { alert((err && err.code ? err.code : '') + ' - ' + (err && err.message ? err.message : '')); } catch(e){}
         }
         return;
       }
@@ -165,13 +195,16 @@ if (btnGoogle) {
         const result = await signInWithPopup(auth, provider);
         console.log('[login] signInWithPopup resultado:', result);
         if (result && result.user) {
+          try { showStatus('Login feito, entrando...'); } catch(e){}
           await criarPerfil(result.user);
-          await verificarOnboardingERotear(result.user);
+          // Forçar redirecionamento direto
+          window.location.href = '../index.html';
+          return;
         }
       } catch (err) {
         console.error('[login] Erro signInWithPopup:', err && err.code ? err.code : err, err && err.message ? err.message : err, err && err.stack ? err.stack : 'no-stack');
         handleAuthError(err);
-        alert('Erro ao entrar com Google (popup): ' + (err && err.message ? err.message : err));
+        try { alert((err && err.code ? err.code : '') + ' - ' + (err && err.message ? err.message : '')); } catch(e){}
       }
     } catch (e) {
       console.error('[login] Erro genérico no clique do login:', e && e.code ? e.code : e, e && e.message ? e.message : e, e && e.stack ? e.stack : 'no-stack');
@@ -210,11 +243,7 @@ onAuthStateChanged(auth, async (user) => {
 
     if (user) {
       console.log('[login] Usuário autenticado via onAuthStateChanged:', user);
-      // Se já processamos o redirect result, não precisamos duplicar ações.
-      if (redirectProcessed) {
-        console.log('[login] Redirect já processado; pulando duplicate handling.');
-        return;
-      }
+      // Sempre processar onAuthStateChanged: garantir redirecionamento imediato
       try {
         await criarPerfil(user);
         console.log('[login] Perfil criado/atualizado via onAuthStateChanged. Redirecionando...');
