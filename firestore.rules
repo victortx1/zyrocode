@@ -1,0 +1,247 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Login: merge só de ultimoAcesso (login.js linha 56-58)
+    function isLoginTouchUpdate() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(['ultimoAcesso']);
+    }
+
+    function protectedScalarsUnchanged() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(
+          ['verified', 'role', 'isAdmin', 'admin', 'permissions', 'email', 'uid']
+        )
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.get('verified', false) == resource.data.get('verified', false)
+        && request.resource.data.get('role', null) == resource.data.get('role', null)
+        && request.resource.data.get('isAdmin', false) == resource.data.get('isAdmin', false)
+        && request.resource.data.get('admin', false) == resource.data.get('admin', false);
+    }
+
+    // Primeiro documento em login/login.js (setDoc sem merge)
+    function validLoginCreate() {
+      return request.resource.data.uid == request.auth.uid
+        && request.resource.data.email is string
+        && request.resource.data.get('moedas', 0) >= 0
+        && request.resource.data.get('moedas', 0) <= 100
+        && request.resource.data.get('xp', 0) == 0
+        && request.resource.data.get('nivel', 1) == 1
+        && request.resource.data.get('vidas', 5) >= 0
+        && request.resource.data.get('vidas', 5) <= 15
+        && request.resource.data.get('streak', 1) >= 0
+        && request.resource.data.get('streak', 1) <= 7
+        && request.resource.data.get('onboardingCompleted', false) == false
+        && request.resource.data.get('verified', false) == false
+        && request.resource.data.get('isAdmin', false) == false
+        && request.resource.data.get('admin', false) == false
+        && !('role' in request.resource.data)
+        && !('permissions' in request.resource.data);
+    }
+
+    // onboarding/onboarding.js: setDoc(..., { merge: true }) quando users/{uid} ainda não existe
+    function validOnboardingCreate() {
+      return request.resource.data.uid == request.auth.uid
+        && request.resource.data.get('onboardingCompleted', false) == true
+        && request.resource.data.get('moedas', 0) >= 0
+        && request.resource.data.get('moedas', 0) <= 100
+        && request.resource.data.get('xp', 0) >= 0
+        && request.resource.data.get('xp', 0) <= 100
+        && request.resource.data.get('nivel', 1) >= 1
+        && request.resource.data.get('nivel', 1) <= 3
+        && request.resource.data.get('verified', false) == false
+        && request.resource.data.get('isAdmin', false) == false
+        && request.resource.data.get('admin', false) == false;
+    }
+
+    function economyMoedasXpOk() {
+      return request.resource.data.get('moedas', resource.data.get('moedas', 0))
+          >= resource.data.get('moedas', 0) - 1000
+        && request.resource.data.get('moedas', resource.data.get('moedas', 0))
+          <= resource.data.get('moedas', 0) + 100
+        && request.resource.data.get('xp', resource.data.get('xp', 0))
+          >= resource.data.get('xp', 0)
+        && request.resource.data.get('xp', resource.data.get('xp', 0))
+          <= resource.data.get('xp', 0) + 100;
+    }
+
+    function economyVidasNivelOk() {
+      return request.resource.data.get('vidas', resource.data.get('vidas', 5)) >= 0
+        && request.resource.data.get('vidas', resource.data.get('vidas', 5)) <= 15
+        && request.resource.data.get('nivel', resource.data.get('nivel', 1))
+          >= resource.data.get('nivel', 1)
+        && request.resource.data.get('nivel', resource.data.get('nivel', 1))
+          <= resource.data.get('nivel', 1) + 2
+        && request.resource.data.get('nivel', resource.data.get('nivel', 1))
+          <= floor(request.resource.data.get('xp', resource.data.get('xp', 0)) / 200) + 1;
+    }
+
+    function economyTokensOk() {
+      return request.resource.data.get('renameTokens', resource.data.get('renameTokens', 0))
+          >= resource.data.get('renameTokens', 0)
+        && request.resource.data.get('renameTokens', resource.data.get('renameTokens', 0))
+          <= resource.data.get('renameTokens', 0) + 1
+        && request.resource.data.get('streakShield', resource.data.get('streakShield', 0))
+          >= resource.data.get('streakShield', 0)
+        && request.resource.data.get('streakShield', resource.data.get('streakShield', 0))
+          <= resource.data.get('streakShield', 0) + 3;
+    }
+
+    function economyDeltaWithinAppLimits() {
+      return economyMoedasXpOk() && economyVidasNivelOk() && economyTokensOk();
+    }
+
+    function economyFieldsChanged() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasAny(['moedas', 'xp', 'nivel', 'vidas', 'renameTokens', 'streakShield']);
+    }
+
+    function arrayGrowsSlowly(field, maxAdded) {
+      return request.resource.data.get(field, resource.data.get(field, []))
+          .hasAll(resource.data.get(field, []))
+        && request.resource.data.get(field, resource.data.get(field, [])).size()
+          <= resource.data.get(field, []).size() + maxAdded;
+    }
+
+    function inventoryFieldsChanged() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasAny([
+          'ownedBanners', 'ownedAvatars', 'inventario', 'aulasConcluidas',
+          'cursosConcluidos', 'consumables', 'ownedSpecials'
+        ]);
+    }
+
+    function inventoryAndProgressValid() {
+      return arrayGrowsSlowly('ownedBanners', 1)
+        && arrayGrowsSlowly('ownedAvatars', 2)
+        && arrayGrowsSlowly('inventario', 1)
+        && arrayGrowsSlowly('aulasConcluidas', 1)
+        && arrayGrowsSlowly('cursosConcluidos', 1)
+        && arrayGrowsSlowly('consumables', 2)
+        && arrayGrowsSlowly('ownedSpecials', 1);
+    }
+
+    function achievementsValid() {
+      return request.resource.data.get('achievements', resource.data.get('achievements', {})).size()
+          >= resource.data.get('achievements', {}).size()
+        && request.resource.data.get('achievements', resource.data.get('achievements', {})).size()
+          <= resource.data.get('achievements', {}).size() + 1;
+    }
+
+    function lessonProgressValid() {
+      return request.resource.data.get('lessonProgress', resource.data.get('lessonProgress', {})).size()
+          >= resource.data.get('lessonProgress', {}).size()
+        && request.resource.data.get('lessonProgress', resource.data.get('lessonProgress', {})).size()
+          <= resource.data.get('lessonProgress', {}).size() + 1;
+    }
+
+    function lessonProgressFieldsChanged() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasAny(['lessonProgress']);
+    }
+
+    function progressLockedFieldsChanged() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasAny(['achievements', 'aulasConcluidas', 'cursosConcluidos']);
+    }
+
+    // Economia, inventário e progresso de curso só via Cloud Functions (Admin SDK).
+    function validGameplayUpdate() {
+      return protectedScalarsUnchanged()
+        && !economyFieldsChanged()
+        && !inventoryFieldsChanged()
+        && !progressLockedFieldsChanged()
+        && (!lessonProgressFieldsChanged() || lessonProgressValid());
+    }
+
+    function userXp(userId) {
+      return get(/databases/$(database)/documents/users/$(userId)).data.get('xp', 0);
+    }
+
+    function userNivel(userId) {
+      return get(/databases/$(database)/documents/users/$(userId)).data.get('nivel', 1);
+    }
+
+    function userHighScore(userId) {
+      return get(/databases/$(database)/documents/users/$(userId)).data.get('highScore', null);
+    }
+
+    function leaderboardPublicShape() {
+      return !request.resource.data.keys().hasAny([
+          'email', 'moedas', 'inventario', 'ownedBanners', 'ownedAvatars',
+          'ownedSpecials', 'consumables', 'verified', 'role', 'permissions',
+          'admin', 'isAdmin', 'achievements', 'lessonProgress', 'aulasConcluidas',
+          'cursosConcluidos', 'renameTokens', 'streakShield', 'vip', 'vipUntil'
+        ])
+        && request.resource.data.keys().hasAll(['uid', 'xp', 'nivel']);
+    }
+
+    function leaderboardMatchesUser(userId) {
+      return exists(/databases/$(database)/documents/users/$(userId))
+        && request.resource.data.xp == userXp(userId)
+        && request.resource.data.nivel == userNivel(userId)
+        && (
+          !('highScore' in request.resource.data)
+          || request.resource.data.highScore == userHighScore(userId)
+        );
+    }
+
+    function validMissionDocument() {
+      return request.resource.data.keys().hasOnly(['date', 'daily'])
+        && request.resource.data.date is string
+        && request.resource.data.daily is map;
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+
+      allow create: if isOwner(userId) && (validLoginCreate() || validOnboardingCreate());
+
+      allow update: if isOwner(userId) && (
+        (isLoginTouchUpdate() && protectedScalarsUnchanged())
+        || validGameplayUpdate()
+      );
+
+      allow delete: if false;
+    }
+
+    match /leaderboard/{userId} {
+      allow read: if true;
+
+      allow create: if isOwner(userId)
+        && leaderboardPublicShape()
+        && request.resource.data.uid == userId
+        && leaderboardMatchesUser(userId);
+
+      allow update: if isOwner(userId)
+        && leaderboardPublicShape()
+        && request.resource.data.uid == userId
+        && leaderboardMatchesUser(userId);
+
+      allow delete: if false;
+    }
+
+    match /missions/{userId} {
+      allow read, create, update: if isOwner(userId) && validMissionDocument();
+      allow delete: if false;
+    }
+
+    match /auditLogs/{logId} {
+      allow read, write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

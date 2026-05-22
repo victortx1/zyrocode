@@ -10,6 +10,7 @@ import {
   getDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { syncLeaderboard } from "../js/leaderboard-sync.js";
 
 // ========================================
 // QUESTIONS DATA
@@ -148,6 +149,30 @@ const QUESTIONS = [
   }
 ];
 
+const NICKNAME_MIN = 2;
+const NICKNAME_MAX = 30;
+const NICKNAME_PATTERN = /^[\p{L}\p{N}][\p{L}\p{N} _.-]*$/u;
+
+function validateNickname(raw) {
+  const value = String(raw || "").trim();
+
+  if (value.length < NICKNAME_MIN || value.length > NICKNAME_MAX) {
+    return {
+      ok: false,
+      message: `Apelido deve ter entre ${NICKNAME_MIN} e ${NICKNAME_MAX} caracteres.`
+    };
+  }
+
+  if (!NICKNAME_PATTERN.test(value)) {
+    return {
+      ok: false,
+      message: "Use apenas letras, números, espaço e os símbolos . _ -"
+    };
+  }
+
+  return { ok: true, value };
+}
+
 // ========================================
 // STATE MANAGEMENT
 // ========================================
@@ -226,6 +251,7 @@ function renderQuestion(stepIndex) {
         id="answerInput"
         placeholder="${question.placeholder}"
         value="${answers[question.id] || ""}"
+        maxlength="${question.id === "nickname" ? NICKNAME_MAX : 120}"
         autocomplete="off"
       />
     `;
@@ -297,6 +323,15 @@ btnNext.addEventListener("click", async () => {
     return;
   }
 
+  if (question.id === "nickname") {
+    const validation = validateNickname(answers.nickname);
+    if (!validation.ok) {
+      alert(validation.message);
+      return;
+    }
+    answers.nickname = validation.value;
+  }
+
   if (currentStep === QUESTIONS.length - 1) {
     // Last question - save to Firestore
     await saveOnboarding();
@@ -325,8 +360,15 @@ async function saveOnboarding() {
     // Generate profileNumber (starting from 100000)
     const profileNumber = Math.floor(Math.random() * 900000) + 100000;
 
-    // Get displayName from answers or user data
-    const displayName = answers.nickname || currentUser.displayName || "Dev Zyro";
+    const nicknameValidation = validateNickname(answers.nickname);
+    if (!nicknameValidation.ok) {
+      loadingOverlay.style.display = "none";
+      alert(nicknameValidation.message);
+      return;
+    }
+
+    const safeNickname = nicknameValidation.value;
+    const displayName = safeNickname || currentUser.displayName || "Dev Zyro";
 
     // Prepare user data
     const userData = {
@@ -335,7 +377,8 @@ async function saveOnboarding() {
       photoURL: currentUser.photoURL || "",
       displayName: displayName,
       name: currentUser.displayName || "Dev Zyro",
-      nickname: answers.nickname,
+      nickname: safeNickname,
+      equippedBanner: "zyro-code",
       motivation: answers.motivation,
       occupation: answers.occupation,
       interestPath: answers.interestPath,
@@ -361,6 +404,7 @@ async function saveOnboarding() {
 
     // Save to Firestore
     await setDoc(doc(db, "users", currentUser.uid), userData, { merge: true });
+    await syncLeaderboard(currentUser.uid, userData);
 
     // Wait a moment for visual feedback
     await new Promise(resolve => setTimeout(resolve, 1000));

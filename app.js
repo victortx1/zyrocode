@@ -9,6 +9,8 @@ import {
   increment,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { syncLeaderboard } from "./js/leaderboard-sync.js";
+import { completeLesson as completeLessonCloud, applyUserPatch } from "./js/game-api.js";
 
 const COURSE_TOPICS = [
   { key: "html-css", icon: "🌐", color: "#f97316", basic: "HTML e CSS básico", advanced: "HTML e CSS avançado", subject: "HTML e CSS" },
@@ -529,15 +531,22 @@ onAuthStateChanged(auth, async (user) => {
       return;
     }
     userData = { ...snap.data(), uid: user.uid };
+    await syncLeaderboard(user.uid, userData);
   }
 
   renderUI();
   renderLearningView();
 });
 
+function normalizeAvatarId(id) {
+  if (id === "Astro") return "astro";
+  if (id === "avatar_default") return "google";
+  return id;
+}
+
 function getLobbyAvatarSrc(data) {
-  const selectedAvatar = data.selectedAvatar || data.equippedAvatar || "google";
-  const normalizedAvatar = selectedAvatar === "avatar_default" ? "google" : selectedAvatar;
+  const selectedAvatar = normalizeAvatarId(data.selectedAvatar || data.equippedAvatar || "google");
+  const normalizedAvatar = selectedAvatar;
   const photoSource = data.photoURL || data.foto || "";
   if (normalizedAvatar === "google") return photoSource;
   // Return the best available avatar path. We try common extensions when used elsewhere expects a specific file.
@@ -1158,6 +1167,7 @@ async function saveLessonProgress() {
 async function finishLesson() {
   closeLesson();
 
+  let cloudResult = null;
   const alreadyDone = isLessonDone(currentLesson.id);
   const xpGain = alreadyDone ? 0 : currentLesson.xp;
   const coinGain = alreadyDone ? 0 : currentLesson.moedas;
@@ -1167,45 +1177,76 @@ async function finishLesson() {
   });
 
   if (userData.uid !== "guest") {
-    const ref = doc(db, "users", userData.uid);
-    const updates = {
-      [`lessonProgress.${currentLesson.id}.correctCount`]: 5,
-      [`lessonProgress.${currentLesson.id}.currentQIndex`]: 5,
-      [`lessonProgress.${currentLesson.id}.completed`]: true,
-      vidas: Math.max(0, livesLeft),
-      ultimoAcesso: serverTimestamp()
-    };
-
-    if (!alreadyDone) {
-      updates.xp = increment(xpGain);
-      updates.moedas = increment(coinGain);
-      updates.aulasConcluidas = arrayUnion(currentLesson.id);
+    try {
+      cloudResult = await completeLessonCloud({
+        lessonId: currentLesson.id,
+        courseId: currentLesson.courseId,
+        livesLeft,
+        acertosSeguidosSession
+      });
+    } catch (error) {
+      console.warn("completeLesson (cloud) falhou, tentando fluxo legado:", error);
     }
 
-    if (completedCourseNow) {
-      updates.cursosConcluidos = arrayUnion(currentLesson.courseId);
-      updates[`achievements.${getAchievementIdForCourse(currentLesson.courseId)}`] = true;
+    if (cloudResult?.user) {
+      applyUserPatch(userData, cloudResult.user);
+      userData.vidas = Math.max(0, livesLeft);
+      userData.lessonProgress = {
+        ...(userData.lessonProgress || {}),
+        [currentLesson.id]: {
+          correctCount: 5,
+          currentQIndex: 5,
+          total: 5,
+          completed: true
+        }
+      };
+    } else {
+      const ref = doc(db, "users", userData.uid);
+      const updates = {
+        [`lessonProgress.${currentLesson.id}.correctCount`]: 5,
+        [`lessonProgress.${currentLesson.id}.currentQIndex`]: 5,
+        [`lessonProgress.${currentLesson.id}.completed`]: true,
+        vidas: Math.max(0, livesLeft),
+        ultimoAcesso: serverTimestamp()
+      };
+
+      if (!alreadyDone) {
+        updates.xp = increment(xpGain);
+        updates.moedas = increment(coinGain);
+        updates.aulasConcluidas = arrayUnion(currentLesson.id);
+      }
+
+      if (completedCourseNow) {
+        updates.cursosConcluidos = arrayUnion(currentLesson.courseId);
+        updates[`achievements.${getAchievementIdForCourse(currentLesson.courseId)}`] = true;
+      }
+
+      await updateDoc(ref, updates);
+
+      const newXP = (userData.xp || 0) + xpGain;
+      const newNivel = Math.floor(newXP / 200) + 1;
+      if (newNivel > (userData.nivel || 1)) {
+        await updateDoc(ref, { nivel: newNivel });
+        userData.nivel = newNivel;
+      }
+
+      await syncLeaderboard(userData.uid, userData);
+      await updateMissions(xpGain);
     }
-
-    await updateDoc(ref, updates);
-
-    const newXP = (userData.xp || 0) + xpGain;
-    const newNivel = Math.floor(newXP / 200) + 1;
-    if (newNivel > (userData.nivel || 1)) {
-      await updateDoc(ref, { nivel: newNivel });
-      userData.nivel = newNivel;
-    }
-
-    await updateMissions(xpGain);
   }
 
-  if (!alreadyDone) {
-    userData.xp = (userData.xp || 0) + xpGain;
-    userData.moedas = (userData.moedas || 0) + coinGain;
+  const resolvedAlreadyDone = cloudResult?.alreadyDone ?? alreadyDone;
+  const resolvedXpGain = cloudResult?.xpGain ?? (resolvedAlreadyDone ? 0 : currentLesson.xp);
+  const resolvedCoinGain = cloudResult?.coinGain ?? (resolvedAlreadyDone ? 0 : currentLesson.moedas);
+  const resolvedCourseDone = cloudResult?.completedCourseNow ?? completedCourseNow;
+
+  if (!resolvedAlreadyDone && !cloudResult?.user) {
+    userData.xp = (userData.xp || 0) + resolvedXpGain;
+    userData.moedas = (userData.moedas || 0) + resolvedCoinGain;
     userData.aulasConcluidas = [...(userData.aulasConcluidas || []), currentLesson.id];
   }
 
-  if (completedCourseNow) {
+  if (resolvedCourseDone && !cloudResult?.user) {
     userData.cursosConcluidos = [...new Set([...(userData.cursosConcluidos || []), currentLesson.courseId])];
     userData.achievements = {
       ...(userData.achievements || {}),
@@ -1226,7 +1267,7 @@ async function finishLesson() {
 
   renderUI();
   renderLearningView();
-  showVictory(xpGain, coinGain, completedCourseNow);
+  showVictory(resolvedXpGain, resolvedCoinGain, resolvedCourseDone);
 }
 
 function findCourse(courseId) {

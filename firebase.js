@@ -28,6 +28,7 @@ try {
   throw e;
 }
 
+export { app };
 export const auth = getAuth(app);
 console.log("[firebase] Auth instanciado:", !!auth);
 export const db = getFirestore(app);

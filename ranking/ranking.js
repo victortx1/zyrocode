@@ -1,9 +1,28 @@
 // ranking.js
 import { auth, db } from "../firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { syncLeaderboard } from "../js/leaderboard-sync.js";
 
 const MAX_RANK = 50;
+
+function escapeHtml(value = "") {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function getDisplayName(user) {
+  return escapeHtml(user.nickname || user.displayName || user.nome || "Dev");
+}
 
 const CHARS = {
   dev_iniciante: "👨‍💻",
@@ -13,12 +32,30 @@ const CHARS = {
   dev_mestre: "🧙"
 };
 
+function normalizeAvatarId(id) {
+  if (id === "Astro") return "astro";
+  if (id === "avatar_default") return "google";
+  return id;
+}
+
 function getRankingAvatarSrc(user) {
-  const selectedAvatar = user.selectedAvatar || user.equippedAvatar || "google";
-  const normalizedAvatar = selectedAvatar === "avatar_default" ? "google" : selectedAvatar;
+  const selectedAvatar = normalizeAvatarId(user.selectedAvatar || user.equippedAvatar || "google");
   const photoSource = user.photoURL || user.foto || "";
-  if (normalizedAvatar === "google") return photoSource;
-  return `../assets/avatars/${normalizedAvatar}`; // extension-less base, try common extensions where used
+  if (selectedAvatar === "google") return photoSource;
+  return `../assets/avatars/${selectedAvatar}`;
+}
+
+function renderRankingAvatar(user, className) {
+  const base = getRankingAvatarSrc(user);
+  if (!base) {
+    const charEmoji = CHARS[user?.personagemSelecionado] || "👨‍💻";
+    return `<div class="${className.replace("-avatar", "-avatar-emoji") || "rank-avatar-emoji"}">${charEmoji}</div>`;
+  }
+
+  const safeBase = escapeHtml(base);
+  const png = `${safeBase}.png`;
+  const jpg = `${safeBase}.jpg`;
+  return `<img src="${png}" onerror="this.onerror=null;this.src='${jpg}'" class="${escapeHtml(className)}" alt=""/>`;
 }
 
 let currentUser = null;
@@ -31,6 +68,17 @@ onAuthStateChanged(auth, async user => {
   if (!user && !currentIsGuest) {
     window.location.href = "../login/login.html";
     return;
+  }
+
+  if (user) {
+    try {
+      const userSnap = await getDoc(doc(db, "users", user.uid));
+      if (userSnap.exists()) {
+        await syncLeaderboard(user.uid, userSnap.data());
+      }
+    } catch (error) {
+      console.warn("Não foi possível atualizar entrada do ranking:", error);
+    }
   }
 
   await loadRanking();
@@ -68,7 +116,7 @@ function dedupeUsers(docs) {
 }
 
 async function loadRanking() {
-  const snap = await getDocs(collection(db, "users"));
+  const snap = await getDocs(collection(db, "leaderboard"));
   const allUsers = dedupeUsers(snap.docs);
   const users = allUsers
     .sort((a, b) => getScore(b) - getScore(a))
@@ -103,8 +151,8 @@ function renderRanking(users) {
     const scoreLabel = typeof u.highScore === "number" ? "🏁" : "⚡";
       return `<div class="podium-item ${pClasses[realIndex]} ${u.uid === currentUser?.uid ? 'is-me' : ''}">
       <div class="podium-medal">${medals[realIndex]}</div>
-      ${getRankingAvatarSrc(u) ? `<img src="${getRankingAvatarSrc(u)}.png" onerror="this.onerror=null;this.src='${getRankingAvatarSrc(u)}.jpg'" class="podium-avatar" alt=""/>` : `<div class="podium-emoji">${charEmoji}</div>`}
-      <div class="podium-name">${u.nickname || u.displayName || u.nome || "Dev"}</div>
+      ${getRankingAvatarSrc(u) ? renderRankingAvatar(u, "podium-avatar") : `<div class="podium-emoji">${charEmoji}</div>`}
+      <div class="podium-name">${getDisplayName(u)}</div>
       <div class="podium-xp">${scoreLabel} ${score}</div>
       <div class="podium-block">${realIndex + 1}</div>
     </div>`;
@@ -117,9 +165,9 @@ function renderRanking(users) {
     const scoreLabel = typeof u.highScore === "number" ? "🏁" : "⚡";
     return `<div class="rank-row ${u.uid === currentUser?.uid ? 'is-me' : ''}">
       <div class="rank-pos">${pos}</div>
-      ${getRankingAvatarSrc(u) ? `<img src="${getRankingAvatarSrc(u)}.png" onerror="this.onerror=null;this.src='${getRankingAvatarSrc(u)}.jpg'" class="rank-avatar" alt=""/>` : `<div class="rank-avatar-emoji">${charEmoji}</div>`}
+      ${getRankingAvatarSrc(u) ? renderRankingAvatar(u, "rank-avatar") : `<div class="rank-avatar-emoji">${charEmoji}</div>`}
       <div class="rank-info">
-        <div class="rank-name">${u.nickname || u.displayName || u.nome || "Dev"} ${u.uid === currentUser?.uid ? "👈" : ""}</div>
+        <div class="rank-name">${getDisplayName(u)} ${u.uid === currentUser?.uid ? "👈" : ""}</div>
         <div class="rank-nivel">Nível ${u.nivel || 1}</div>
       </div>
       <div class="rank-xp">${scoreLabel} ${score}</div>

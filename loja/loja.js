@@ -9,8 +9,25 @@ import {
   increment,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { syncLeaderboard } from "../js/leaderboard-sync.js";
+import { purchaseShopItem as purchaseShopItemCloud, applyUserPatch } from "../js/game-api.js";
 
 let userData = null;
+
+const DEFAULT_BANNER_ID = "zyro-code";
+const MAX_LIVES = 5;
+const MAX_LIVES_PACK_10 = 15;
+
+function normalizeBannerId(id) {
+  if (!id || id === "orange_default") return DEFAULT_BANNER_ID;
+  return id;
+}
+
+function normalizeAvatarId(id) {
+  if (id === "Astro") return "astro";
+  if (id === "avatar_default") return "google";
+  return id;
+}
 
 const PROFILE_AVATARS = [
   {
@@ -139,7 +156,7 @@ function isVipActive() {
 
 function getSelectedAvatarId(data) {
   const selected = data.selectedAvatar || data.equippedAvatar || "google";
-  return selected === "avatar_default" ? "google" : selected;
+  return normalizeAvatarId(selected);
 }
 
 function getAvatarDefinition(id) {
@@ -158,7 +175,7 @@ function isOwned(item) {
 
 function isEquipped(item) {
   if (item.action === "char") return userData.personagemSelecionado === item.id;
-  if (item.action === "banner") return (userData.equippedBanner || "orange_default") === item.id;
+  if (item.action === "banner") return normalizeBannerId(userData.equippedBanner) === item.id;
   if (item.action === "avatar") return getSelectedAvatarId(userData) === item.id;
   return false;
 }
@@ -311,7 +328,6 @@ async function handleBuy(itemId, tab) {
   const item = itemList?.find(i => i.id === itemId);
   if (!item) return;
 
-  const ref = doc(db, "users", userData.uid);
   const owned = isOwned(item);
   const consumable = CONSUMABLE_ACTIONS.has(item.action);
 
@@ -325,6 +341,24 @@ async function handleBuy(itemId, tab) {
     return;
   }
 
+  try {
+    const cloudResult = await purchaseShopItemCloud({ itemId, tab });
+    if (cloudResult?.user) {
+      applyUserPatch(userData, cloudResult.user);
+      syncCoins();
+      renderShop(tab);
+      showToast(owned ? `✨ ${item.name} equipado!` : `✅ ${item.name} comprado!`);
+      return;
+    }
+  } catch (error) {
+    console.warn("purchaseShopItem (cloud) falhou, tentando fluxo legado:", error);
+    if (error?.code === "functions/failed-precondition") {
+      alert("Moedas insuficientes!");
+      return;
+    }
+  }
+
+  const ref = doc(db, "users", userData.uid);
   const updates = {
     updatedAt: serverTimestamp()
   };
@@ -360,11 +394,11 @@ async function handleBuy(itemId, tab) {
   }
 
   if (item.action === "vidas") {
-    updates.vidas = Math.min(5, (userData.vidas ?? 5) + 5);
+    updates.vidas = Math.min(MAX_LIVES, (userData.vidas ?? 5) + 5);
   }
 
   if (item.action === "vidas10") {
-    updates.vidas = Math.min(5, (userData.vidas ?? 5) + 10);
+    updates.vidas = Math.min(MAX_LIVES_PACK_10, (userData.vidas ?? 5) + 10);
   }
 
   if (item.action === "rename") {
@@ -394,6 +428,7 @@ async function handleBuy(itemId, tab) {
   await updateDoc(ref, updates);
 
   if (!owned && item.price > 0) userData.moedas = (userData.moedas || 0) - item.price;
+  await syncLeaderboard(userData.uid, userData);
   if (!owned && item.action === "char") userData.inventario = [...new Set([...(userData.inventario || []), item.id])];
   if (!owned && item.action === "banner") userData.ownedBanners = [...new Set([...(userData.ownedBanners || []), item.id])];
   if (item.action === "avatar") userData.ownedAvatars = [...new Set([...(userData.ownedAvatars || []), item.id])];

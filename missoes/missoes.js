@@ -11,6 +11,8 @@ import {
   updateDoc,
   increment
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { syncLeaderboard } from "../js/leaderboard-sync.js";
+import { claimMission as claimMissionCloud, applyUserPatch } from "../js/game-api.js";
 
 const DAILY_MISSIONS = [
   { id: "login", icon: "📲", name: "Check-in diário", desc: "Entre no app hoje", goal: 1, rewardXP: 10, rewardCoins: 15, rewardHearts: 0 },
@@ -181,6 +183,19 @@ async function claimMission(missionId, uid) {
 
   if (!state.done || state.claimed) return;
 
+  try {
+    const cloudResult = await claimMissionCloud({ missionId });
+    if (cloudResult?.user) {
+      applyUserPatch(userData, cloudResult.user);
+      missionData.daily[missionId].claimed = true;
+      renderMissions(uid);
+      showToast("🎁 Recompensa coletada!");
+      return;
+    }
+  } catch (error) {
+    console.warn("claimMission (cloud) falhou, tentando fluxo legado:", error);
+  }
+
   await updateDoc(doc(db, "missions", uid), {
     [`daily.${missionId}.claimed`]: true
   });
@@ -191,6 +206,11 @@ async function claimMission(missionId, uid) {
   if (m.rewardHearts) updates.vidas = Math.min(5, (userData.vidas ?? 5) + m.rewardHearts);
 
   await updateDoc(doc(db, "users", uid), updates);
+
+  userData.xp = (userData.xp || 0) + (m.rewardXP || 0);
+  userData.moedas = (userData.moedas || 0) + (m.rewardCoins || 0);
+  if (m.rewardHearts) userData.vidas = Math.min(5, (userData.vidas ?? 5) + m.rewardHearts);
+  await syncLeaderboard(uid, userData);
 
   missionData.daily[missionId].claimed = true;
   renderMissions(uid);

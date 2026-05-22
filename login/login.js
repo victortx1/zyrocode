@@ -12,6 +12,7 @@ import {
   getDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { syncLeaderboard } from "../js/leaderboard-sync.js";
 
 async function criarPerfil(user) {
   const ref = doc(db, "users", user.uid);
@@ -39,7 +40,17 @@ async function criarPerfil(user) {
       vidas: 5,
       nomeEditado: false,
       trocouNome: false,
-      onboardingCompleted: false
+      onboardingCompleted: false,
+      equippedBanner: "zyro-code"
+    });
+    await syncLeaderboard(user.uid, {
+      uid: user.uid,
+      nome: user.displayName || "Dev Zyro",
+      displayName: user.displayName || "Dev Zyro",
+      photoURL: user.photoURL || "",
+      xp: 0,
+      nivel: 1,
+      personagemSelecionado: "dev_iniciante"
     });
   } else {
     await setDoc(ref, {
@@ -55,9 +66,6 @@ async function verificarOnboardingERotear(user) {
     const userRef = doc(db, "users", user.uid);
     const userSnap = await getDoc(userRef);
     const data = userSnap.exists() ? userSnap.data() : {};
-
-    console.log("DOC EXISTE?", userSnap.exists());
-    console.log("ONBOARDING?", data.onboardingCompleted);
 
     if (!userSnap.exists()) {
       window.location.href = "../onboarding/onboarding.html";
@@ -80,48 +88,36 @@ const btnGoogle = document.getElementById("btnGoogle");
 const btnGuest = document.getElementById("btnGuest");
 const btnLogout = document.getElementById("btnLogout");
 
-console.log('[login] login.js carregado', {
-  auth: !!auth,
-  db: !!db,
-  provider: !!provider,
-  location: window.location.href
-});
-
-function isMobile() {
-  if (typeof navigator === "undefined") return false;
-  return /Mobi|Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
-}
-
 function showStatus(msg) {
   try {
-    let el = document.getElementById('loginStatus');
+    let el = document.getElementById("loginStatus");
     if (!el) {
-      el = document.createElement('div');
-      el.id = 'loginStatus';
-      el.style.position = 'fixed';
-      el.style.left = '0';
-      el.style.right = '0';
-      el.style.top = '0';
-      el.style.padding = '12px';
-      el.style.background = 'rgba(0,0,0,0.85)';
-      el.style.color = '#fff';
-      el.style.textAlign = 'center';
-      el.style.zIndex = '9999';
-      el.style.fontSize = '16px';
+      el = document.createElement("div");
+      el.id = "loginStatus";
+      el.style.position = "fixed";
+      el.style.left = "0";
+      el.style.right = "0";
+      el.style.top = "0";
+      el.style.padding = "12px";
+      el.style.background = "rgba(0,0,0,0.85)";
+      el.style.color = "#fff";
+      el.style.textAlign = "center";
+      el.style.zIndex = "9999";
+      el.style.fontSize = "16px";
       document.body.appendChild(el);
     }
     el.textContent = msg;
   } catch (e) {
-    console.log('[login] showStatus error', e);
+    console.error("Erro ao exibir status de login:", e);
   }
 }
 
 function handleAuthError(e) {
-  console.error("Firebase Auth error:", e && e.code ? e.code : e, e && e.message ? e.message : e, e && e.stack ? e.stack : "no-stack");
+  console.error("Firebase Auth error:", e && e.code ? e.code : e, e && e.message ? e.message : e);
   if (!e || !e.code) return;
   switch (e.code) {
     case "auth/unauthorized-domain":
-      console.error("Domínio não autorizado. Adicione 'https://victortx1.github.io' nas configurações do Firebase Authentication (Authorized domains).");
+      console.error("Domínio não autorizado. Adicione o domínio nas configurações do Firebase Authentication (Authorized domains).");
       break;
     case "auth/popup-blocked":
       console.error("Popup bloqueado pelo navegador. Permita popups ou tente em modo desktop com signInWithPopup.");
@@ -137,36 +133,25 @@ function handleAuthError(e) {
   }
 }
 
-// Usamos somente signInWithPopup para login (desktop e mobile)
-
 if (btnGoogle) {
   btnGoogle.addEventListener("click", async (ev) => {
     if (ev && ev.preventDefault) ev.preventDefault();
-    console.log('[login] btnGoogle click detectado');
+
     try {
       localStorage.removeItem("zyroGuest");
       localStorage.removeItem("zyroUserName");
 
-      console.log('[login] Iniciando signInWithPopup (desktop/mobile)...');
-      try {
-        const result = await signInWithPopup(auth, provider);
-        console.log('[login] signInWithPopup resultado:', result);
-        if (result && result.user) {
-          try { showStatus('Login feito, entrando...'); } catch(e){}
-          await criarPerfil(result.user);
-          try { alert('Login Google feito, entrando no app'); } catch(e){}
-          // Forçar redirecionamento direto
-          window.location.href = '../index.html';
-          return;
-        }
-      } catch (err) {
-        console.error('[login] Erro signInWithPopup:', err && err.code ? err.code : err, err && err.message ? err.message : err, err && err.stack ? err.stack : 'no-stack');
-        try { alert((err && err.code ? err.code : '') + ' - ' + (err && err.message ? err.message : '')); } catch(e){}
+      const result = await signInWithPopup(auth, provider);
+      if (result && result.user) {
+        showStatus("Login feito, entrando...");
+        await criarPerfil(result.user);
+        await verificarOnboardingERotear(result.user);
+        return;
       }
-    } catch (e) {
-      console.error('[login] Erro genérico no clique do login:', e && e.code ? e.code : e, e && e.message ? e.message : e, e && e.stack ? e.stack : 'no-stack');
-      handleAuthError(e);
-      alert("Erro ao entrar com Google: " + (e && e.message ? e.message : e));
+    } catch (err) {
+      console.error("Erro signInWithPopup:", err && err.code ? err.code : err, err && err.message ? err.message : err);
+      handleAuthError(err);
+      alert("Erro ao entrar com Google: " + (err && err.message ? err.message : err));
     }
   });
 }
@@ -190,28 +175,21 @@ if (btnLogout) {
 
 onAuthStateChanged(auth, async (user) => {
   try {
-    console.log('[login] onAuthStateChanged fired, user:', user, 'auth.currentUser:', auth.currentUser);
     const isGuest = localStorage.getItem("zyroGuest") === "true";
 
     if (isGuest) {
-      console.log('[login] Usuário é guest, ignorando onAuthStateChanged.');
       return;
     }
 
     if (user) {
-      console.log('[login] Usuário autenticado via onAuthStateChanged:', user);
-      // Sempre processar onAuthStateChanged: garantir redirecionamento imediato
       try {
         await criarPerfil(user);
-        console.log('[login] Perfil criado/atualizado via onAuthStateChanged. Redirecionando...');
         await verificarOnboardingERotear(user);
       } catch (err) {
-        console.error('[login] Erro ao processar usuário em onAuthStateChanged:', err && err.code ? err.code : err, err && err.message ? err.message : err, err && err.stack ? err.stack : 'no-stack');
+        console.error("Erro ao processar usuário em onAuthStateChanged:", err && err.code ? err.code : err, err && err.message ? err.message : err);
       }
-    } else {
-      console.log('[login] onAuthStateChanged: nenhum usuário autenticado.');
     }
   } catch (e) {
-    console.error('[login] Erro em onAuthStateChanged handler:', e && e.code ? e.code : e, e && e.message ? e.message : e, e && e.stack ? e.stack : 'no-stack');
+    console.error("Erro em onAuthStateChanged handler:", e && e.code ? e.code : e, e && e.message ? e.message : e);
   }
 });

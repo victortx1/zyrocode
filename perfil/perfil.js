@@ -12,8 +12,46 @@ import {
   increment,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { syncLeaderboard } from "../js/leaderboard-sync.js";
+import { equipCosmetic as equipCosmeticCloud } from "../js/game-api.js";
 
 const wrap = document.getElementById("perfilWrap");
+
+const DEFAULT_BANNER_ID = "zyro-code";
+const NICKNAME_MIN = 2;
+const NICKNAME_MAX = 30;
+const NICKNAME_PATTERN = /^[\p{L}\p{N}][\p{L}\p{N} _.-]*$/u;
+
+function normalizeBannerId(id) {
+  if (!id || id === "orange_default") return DEFAULT_BANNER_ID;
+  return id;
+}
+
+function normalizeAvatarId(id) {
+  if (id === "Astro") return "astro";
+  if (id === "avatar_default") return "google";
+  return id;
+}
+
+function validateNickname(raw) {
+  const value = String(raw || "").trim();
+
+  if (value.length < NICKNAME_MIN || value.length > NICKNAME_MAX) {
+    return {
+      ok: false,
+      message: `Apelido deve ter entre ${NICKNAME_MIN} e ${NICKNAME_MAX} caracteres.`
+    };
+  }
+
+  if (!NICKNAME_PATTERN.test(value)) {
+    return {
+      ok: false,
+      message: "Use apenas letras, números, espaço e os símbolos . _ -"
+    };
+  }
+
+  return { ok: true, value };
+}
 
 const CHARS = {
   dev_iniciante: "👨‍💻",
@@ -132,26 +170,26 @@ const PROFILE_AVATARS = [
     type: "image"
   },
   {
-    id: "Astro",
+    id: "astro",
     name: "Astro Dev",
     image: "../assets/avatars/astro.jpg",
     price: 300,
-    rarity: "rare",
+    rarity: "common",
     type: "image"
   },
   {
     id: "Dev",
     name: "Dev",
     image: "../assets/avatars/dev.jpg",
-    price: 450,
-    rarity: "epic",
+    price: 300,
+    rarity: "special",
     type: "image"
   },
   {
     id: "Raposa da Copa",
     name: "Raposa da Copa",
     image: "../assets/avatars/raposadacopa.jpg",
-    price: 300,
+    price: 450,
     rarity: "rare",
     type: "image"
   },
@@ -159,7 +197,7 @@ const PROFILE_AVATARS = [
     id: "Tirados",
     name: "Tirados",
     image: "../assets/avatars/tirados.webp",
-    price: 300,
+    price: 400,
     rarity: "rare",
     type: "image"
   },
@@ -167,7 +205,7 @@ const PROFILE_AVATARS = [
     id: "Neymar",
     name: "Neymar Jr",
     image: "../assets/avatars/neymarc.png",
-    price: 400,
+    price: 550,
     rarity: "rare",
     type: "image"
   }
@@ -349,12 +387,14 @@ function getLeagueByXp(xpValue = 0) {
   return selected;
 }
 
-function getBannerById(id = "orange_default") {
-  return PROFILE_BANNERS.find((banner) => banner.id === id) || PROFILE_BANNERS[0];
+function getBannerById(id = DEFAULT_BANNER_ID) {
+  const bannerId = normalizeBannerId(id);
+  return PROFILE_BANNERS.find((banner) => banner.id === bannerId) || PROFILE_BANNERS[0];
 }
 
 function getUnlockedBanners(data) {
-  const owned = new Set(["orange_default", ...(data.ownedBanners || [])]);
+  const owned = new Set([DEFAULT_BANNER_ID, ...(data.ownedBanners || [])]);
+  if (data.ownedBanners?.includes("orange_default")) owned.add(DEFAULT_BANNER_ID);
   return PROFILE_BANNERS.filter((banner) => owned.has(banner.id));
 }
 
@@ -366,7 +406,7 @@ function isVipActive(data) {
 
 function getSelectedAvatarId(data) {
   const selected = data.selectedAvatar || data.equippedAvatar || "google";
-  return selected === "avatar_default" ? "google" : selected;
+  return normalizeAvatarId(selected);
 }
 
 function getAvatarDefinition(id) {
@@ -473,15 +513,15 @@ function showEditNameModal(userData, uid, onSave) {
   document.getElementById("modalCancel").onclick = closeModal;
 
   document.getElementById("modalSave").onclick = async () => {
-    const newName = input.value.trim();
+    const validation = validateNickname(input.value);
 
-    if (!newName) {
-      showToast("Digite um apelido válido.", "warning");
+    if (!validation.ok) {
+      showToast(validation.message, "warning");
       return;
     }
 
     closeModal();
-    await onSave(newName);
+    await onSave(validation.value);
   };
 
   input.focus();
@@ -540,7 +580,9 @@ function showCountryModal(uid, force = false) {
         modal.classList.remove("active");
 
         const snap = await getDoc(doc(db, "users", uid));
-        renderPerfil(snap.data(), uid, false);
+        const freshData = snap.data();
+        await syncLeaderboard(uid, freshData);
+        renderPerfil(freshData, uid, false);
 
         showToast(`País atualizado para ${country.flag} ${country.name}`, "success");
       } catch (error) {
@@ -617,7 +659,7 @@ function showBannerModal(data, uid) {
     document.body.appendChild(modal);
   }
 
-  const equippedId = data.equippedBanner || "orange_default";
+  const equippedId = normalizeBannerId(data.equippedBanner);
   const unlockedBanners = getUnlockedBanners(data);
 
   modal.innerHTML = `
@@ -653,6 +695,25 @@ function showBannerModal(data, uid) {
       const bannerId = button.dataset.id;
 
       try {
+        let applied = false;
+
+        try {
+          const cloudResult = await equipCosmeticCloud({ type: "banner", itemId: bannerId });
+          if (cloudResult?.user) {
+            applied = true;
+            modal.classList.remove("active");
+            const snap = await getDoc(doc(db, "users", uid));
+            const freshData = { ...snap.data(), ...cloudResult.user };
+            await syncLeaderboard(uid, freshData);
+            renderPerfil(freshData, uid, false);
+            showToast("Banner equipado com sucesso.", "success");
+          }
+        } catch (cloudError) {
+          console.warn("equipCosmetic (cloud) falhou, tentando fluxo legado:", cloudError);
+        }
+
+        if (applied) return;
+
         await updateDoc(doc(db, "users", uid), {
           equippedBanner: bannerId,
           updatedAt: serverTimestamp()
@@ -661,7 +722,9 @@ function showBannerModal(data, uid) {
         modal.classList.remove("active");
 
         const snap = await getDoc(doc(db, "users", uid));
-        renderPerfil(snap.data(), uid, false);
+        const freshData = snap.data();
+        await syncLeaderboard(uid, freshData);
+        renderPerfil(freshData, uid, false);
         showToast("Banner equipado com sucesso.", "success");
       } catch (error) {
         console.error("Erro ao equipar banner:", error);
@@ -676,7 +739,7 @@ function renderPerfil(data, uid, isGuest = false) {
   const personagem = data.personagemSelecionado || "dev_iniciante";
   const country = getCountryInfo(data);
   const joinDate = formatJoinDate(data);
-  const equippedBanner = getBannerById(data.equippedBanner || "orange_default");
+  const equippedBanner = getBannerById(data.equippedBanner);
   const achievements = {
     novo_membro: true,
     ...(data.achievements || {})
@@ -992,7 +1055,9 @@ function bindProfileEvents(data, uid, isGuest) {
           await updateDoc(doc(db, "users", uid), updates);
 
           const snap = await getDoc(doc(db, "users", uid));
-          renderPerfil(snap.data(), uid, false);
+          const freshData = snap.data();
+          await syncLeaderboard(uid, freshData);
+          renderPerfil(freshData, uid, false);
 
           showToast("Apelido atualizado com sucesso.", "success");
         } catch (error) {
@@ -1099,7 +1164,7 @@ onAuthStateChanged(auth, async (user) => {
         vidas: 5,
         personagemSelecionado: "dev_iniciante",
         aulasConcluidas: [],
-        equippedBanner: "orange_default"
+        equippedBanner: DEFAULT_BANNER_ID
       }, "guest", true);
 
       return;
@@ -1130,6 +1195,7 @@ onAuthStateChanged(auth, async (user) => {
       showBeginnerGuide();
     }
 
+    await syncLeaderboard(user.uid, userData);
     renderPerfil(userData, user.uid, false);
   } catch (error) {
     console.error("Erro no perfil:", error);
