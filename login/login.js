@@ -24,6 +24,8 @@ async function criarPerfil(user) {
       email: user.email || "",
       foto: user.photoURL || "",
       photoURL: user.photoURL || "",
+      selectedAvatar: "google",
+      ownedAvatars: ["google"],
       displayName: user.displayName || "Dev Zyro",
       xp: 0,
       moedas: 100,

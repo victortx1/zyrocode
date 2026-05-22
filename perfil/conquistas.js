@@ -15,42 +15,42 @@ const ACHIEVEMENT_GROUPS = [
         desc: "Entrou para a comunidade Zyro Code",
         icon: "⚡",
         // Para usar uma imagem própria, coloque o caminho aqui. Ex: "../assets/conquistas/novo-membro.png"
-        image: ""
+        image: "../assets/conquistas/raposa.webp"
       },
       {
         id: "first_step",
         title: "Primeiro Passo",
         desc: "Complete sua primeira aula",
         icon: "🧑‍💻",
-        image: ""
+        image: "../assets/conquistas/r2.webp"
       },
       {
         id: "explorer",
         title: "Explorador",
         desc: "Complete 5 aulas",
         icon: "🤠",
-        image: ""
+        image: "../assets/conquistas/r3.png"
       },
       {
         id: "on_fire",
         title: "Fogo!",
         desc: "Mantenha 7 dias de sequência",
         icon: "🔥",
-        image: ""
+        image: "../assets/conquistas/r4.webp"
       },
       {
         id: "dedicated",
         title: "Dedicado",
         desc: "Complete 20 aulas",
         icon: "🏆",
-        image: ""
+        image: "../assets/conquistas/r5.webp"
       },
       {
         id: "xp_strong",
         title: "XP Forte",
         desc: "Alcance 1000 XP",
         icon: "⚡",
-        image: ""
+        image: "../assets/conquistas/r6.webp"
       }
     ]
   },
@@ -62,42 +62,42 @@ const ACHIEVEMENT_GROUPS = [
         title: "Mestre HTML",
         desc: "Termine o módulo HTML",
         icon: "🌐",
-        image: ""
+        image: "../assets/conquistas/r7.webp"
       },
       {
         id: "css_artist",
         title: "Artista CSS",
         desc: "Termine o módulo CSS",
         icon: "🎨",
-        image: ""
+        image: "../assets/conquistas/r8.webp"
       },
       {
         id: "js_spark",
         title: "Faísca JS",
         desc: "Termine o módulo JavaScript",
         icon: "✨",
-        image: ""
+        image: "../assets/conquistas/r9.webp"
       },
       {
         id: "mission_runner",
         title: "Corredor de Missões",
         desc: "Complete 10 missões",
         icon: "🎯",
-        image: ""
+        image: "../assets/conquistas/r10.webp"
       },
       {
         id: "league_climber",
         title: "Subiu de Liga",
         desc: "Alcance uma liga nova",
         icon: "🥇",
-        image: ""
+        image: "../assets/conquistas/r11.webp"
       },
       {
         id: "zyro_legend",
         title: "Lenda Zyro",
         desc: "Alcance 10000 XP",
         icon: "👑",
-        image: ""
+        image: "../assets/conquistas/r12.webp"
       }
     ]
   }

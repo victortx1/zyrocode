@@ -103,6 +103,7 @@ body {
   text-align: center;
   position: relative;
   overflow: hidden;
+  transition: all 0.3s ease;
 }
 
 .achievement-tile.unlocked {
@@ -114,8 +115,15 @@ body {
 }
 
 .achievement-tile.locked {
-  filter: grayscale(1);
   opacity: 0.62;
+}
+
+.achievement-tile.locked .achievement-art img {
+  filter: grayscale(1) brightness(0.65);
+}
+
+.achievement-tile.unlocked .achievement-art img {
+  filter: none;
 }
 
 .achievement-art {
@@ -127,6 +135,7 @@ body {
   place-items: center;
   margin-bottom: 10px;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .achievement-art img {
@@ -139,6 +148,7 @@ body {
 .achievement-icon-fallback {
   font-size: 44px;
   line-height: 1;
+  display: block;
 }
 
 .achievement-name {
@@ -190,5 +200,18 @@ body {
   .achievement-art {
     width: 68px;
     height: 68px;
+    margin-bottom: 8px;
+  }
+
+  .achievement-icon-fallback {
+    font-size: 40px;
+  }
+
+  .achievement-name {
+    font-size: 13px;
+  }
+
+  .achievement-desc {
+    font-size: 10px;
   }
 }

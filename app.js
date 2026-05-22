@@ -535,6 +535,16 @@ onAuthStateChanged(auth, async (user) => {
   renderLearningView();
 });
 
+function getLobbyAvatarSrc(data) {
+  const selectedAvatar = data.selectedAvatar || data.equippedAvatar || "google";
+  const normalizedAvatar = selectedAvatar === "avatar_default" ? "google" : selectedAvatar;
+  const photoSource = data.photoURL || data.foto || "";
+  if (normalizedAvatar === "google") return photoSource;
+  // Return the best available avatar path. We try common extensions when used elsewhere expects a specific file.
+  // Prefer explicit filenames used in assets (png, jpg, webp).
+  return `../assets/avatars/${normalizedAvatar}`; // extension will be tried by caller
+}
+
 function renderUI() {
   document.getElementById("streakVal").textContent = userData.streak || 0;
   document.getElementById("coinsVal").textContent = userData.moedas || 0;
@@ -543,7 +553,36 @@ function renderUI() {
 
   const userAvatar = document.getElementById("userAvatar");
   if (userAvatar) {
-    userAvatar.src = userData.foto || userData.photoURL || "";
+    const avatarBase = getLobbyAvatarSrc(userData) || "";
+    const setAvatarSrc = (base) => {
+      if (!base) { userAvatar.src = ""; return; }
+      // If base ends with an extension or is a remote photo URL, use directly
+      if (/\.(png|jpg|jpeg|webp)$/.test(base) || /^https?:\/\//.test(base)) {
+        userAvatar.src = base;
+        return;
+      }
+
+      // Try common extensions in order
+      const exts = [".png", ".jpg", ".webp", ".jpeg"];
+      let tried = 0;
+      const tryNext = () => {
+        if (tried >= exts.length) { userAvatar.src = ""; return; }
+        const candidate = base + exts[tried++];
+        const img = new Image();
+        img.onload = () => { userAvatar.src = candidate; };
+        img.onerror = () => { tryNext(); };
+        img.src = candidate;
+      };
+
+      // If base looks like a remote image (starts with ../ or / or http), we still try extensions
+      if (/^(https?:)?\/\//.test(base) || base.startsWith("../") || base.startsWith("/")) {
+        tryNext();
+      } else {
+        tryNext();
+      }
+    };
+
+    setAvatarSrc(avatarBase);
     userAvatar.addEventListener("click", () => window.location.href = "./perfil/perfil.html");
   }
 

@@ -114,6 +114,65 @@ const PROFILE_BANNERS = [
   }
 ];
 
+const PROFILE_AVATARS = [
+  {
+    id: "google",
+    name: "Foto do Google",
+    image: null,
+    price: 0,
+    rarity: "common",
+    type: "google"
+  },
+  {
+    id: "raposa",
+    name: "Raposa Dev",
+    image: "../assets/avatars/favicon.png",
+    price: 250,
+    rarity: "rare",
+    type: "image"
+  },
+  {
+    id: "Astro",
+    name: "Astro Dev",
+    image: "../assets/avatars/astro.jpg",
+    price: 300,
+    rarity: "rare",
+    type: "image"
+  },
+  {
+    id: "Dev",
+    name: "Dev",
+    image: "../assets/avatars/dev.jpg",
+    price: 450,
+    rarity: "epic",
+    type: "image"
+  },
+  {
+    id: "Raposa da Copa",
+    name: "Raposa da Copa",
+    image: "../assets/avatars/raposadacopa.jpg",
+    price: 300,
+    rarity: "rare",
+    type: "image"
+  },
+  {
+    id: "Tirados",
+    name: "Tirados",
+    image: "../assets/avatars/tirados.webp",
+    price: 300,
+    rarity: "rare",
+    type: "image"
+  },
+  {
+    id: "Neymar",
+    name: "Neymar Jr",
+    image: "../assets/avatars/neymarc.png",
+    price: 400,
+    rarity: "rare",
+    type: "image"
+  }
+];
+
 const AVATAR_MAP = {
   avatar_default: { emoji: "👤", bg: "linear-gradient(135deg,#111,#222)" },
   dev_laranja: { emoji: "🧑‍💻", bg: "linear-gradient(135deg,#ff7b00,#ff9500)" },
@@ -152,14 +211,14 @@ const ACHIEVEMENTS = buildAchievements();
 
 function buildAchievements() {
   const base = [
-    ["novo_membro", "⚡", "Novo Membro", "Entrou para a comunidade Zyro Code"],
-    ["first_step", "🧑‍💻", "Primeiro Passo", "Complete sua primeira aula"],
-    ["explorer", "🤠", "Explorador", "Complete 5 aulas"],
-    ["on_fire", "🔥", "Fogo!", "Mantenha 7 dias de sequência"],
-    ["dedicated", "🏆", "Dedicado", "Complete 20 aulas"],
-    ["html_master", "🌐", "Mestre HTML", "Termine o módulo HTML"],
-    ["xp_strong", "⚡", "XP Forte", "Alcance 1000 XP"]
-  ].map(([id, icon, title, desc]) => ({ id, icon, title, desc }));
+    { id: "novo_membro", icon: "⚡", title: "Novo Membro", desc: "Entrou para a comunidade Zyro Code", image: "" },
+    { id: "first_step", icon: "🧑‍💻", title: "Primeiro Passo", desc: "Complete sua primeira aula", image: "" },
+    { id: "explorer", icon: "🤠", title: "Explorador", desc: "Complete 5 aulas", image: "" },
+    { id: "on_fire", icon: "🔥", title: "Fogo!", desc: "Mantenha 7 dias de sequência", image: "" },
+    { id: "dedicated", icon: "🏆", title: "Dedicado", desc: "Complete 20 aulas", image: "" },
+    { id: "html_master", icon: "🌐", title: "Mestre HTML", desc: "Termine o módulo HTML", image: "" },
+    { id: "xp_strong", icon: "⚡", title: "XP Forte", desc: "Alcance 1000 XP", image: "" }
+  ];
 
   const icons = ["🔥", "⚡", "🏆", "💎", "🚀", "🎯", "👑", "🧠", "💻", "📚", "🛡️", "🌟"];
   const extras = [];
@@ -169,7 +228,8 @@ function buildAchievements() {
       id: `achievement_${i}`,
       icon: icons[i % icons.length],
       title: `Conquista ${i}`,
-      desc: `Complete o desafio especial número ${i}.`
+      desc: `Complete o desafio especial número ${i}.`,
+      image: ""
     });
   }
 
@@ -304,25 +364,38 @@ function isVipActive(data) {
   return date.getTime() > Date.now();
 }
 
+function getSelectedAvatarId(data) {
+  const selected = data.selectedAvatar || data.equippedAvatar || "google";
+  return selected === "avatar_default" ? "google" : selected;
+}
+
+function getAvatarDefinition(id) {
+  return PROFILE_AVATARS.find((avatar) => avatar.id === id) || PROFILE_AVATARS[0];
+}
+
 function getAvatarHtml(data) {
-  const avatarId = data.equippedAvatar || "";
+  const avatarId = getSelectedAvatarId(data);
+  const avatar = getAvatarDefinition(avatarId);
+  const photoSource = escapeHtml(data.photoURL || data.foto || "");
 
-  if (avatarId && AVATAR_MAP[avatarId]) {
-    const avatar = AVATAR_MAP[avatarId];
+  if (avatar.type === "google") {
+    if (photoSource) {
+      return `<img src="${photoSource}" class="profile-avatar" alt="Foto do Google">`;
+    }
 
+    const def = AVATAR_MAP.avatar_default;
     return `
-      <div class="profile-avatar-emoji" style="background:${avatar.bg}">
-        ${avatar.emoji}
+      <div class="profile-avatar-emoji" style="background:${def.bg}">
+        ${def.emoji}
       </div>
     `;
   }
 
-  if (data.photoURL) {
-    return `<img src="${escapeHtml(data.photoURL)}" class="profile-avatar" alt="Foto de perfil">`;
+  if (avatar.type === "image" && avatar.image) {
+    return `<img src="${escapeHtml(avatar.image)}" class="profile-avatar" alt="${escapeHtml(avatar.name)}">`;
   }
 
   const def = AVATAR_MAP.avatar_default;
-
   return `
     <div class="profile-avatar-emoji" style="background:${def.bg}">
       ${def.emoji}
@@ -478,6 +551,21 @@ function showCountryModal(uid, force = false) {
   });
 }
 
+function getAchievementArtHtml(item) {
+  if (item.image) {
+    return `
+      <img
+        src="${escapeHtml(item.image)}"
+        alt="${escapeHtml(item.title)}"
+        class="achievement-img"
+        onerror="this.replaceWith(Object.assign(document.createElement('span'), { className: 'achievement-icon-fallback', textContent: '${escapeHtml(item.icon)}' }))"
+      />
+    `;
+  }
+
+  return `<span class="achievement-icon-fallback">${item.icon}</span>`;
+}
+
 function showAllAchievementsModal(userAchievements = {}) {
   let modal = document.getElementById("all-achievements-modal");
 
@@ -503,7 +591,7 @@ function showAllAchievementsModal(userAchievements = {}) {
         ${ACHIEVEMENTS.map((a) => `
           <div class="achievement-card ${userAchievements[a.id] ? "unlocked" : "locked"}">
             ${!userAchievements[a.id] ? '<span class="new-badge">BLOQ.</span>' : '<span class="new-badge unlocked-badge">OK</span>'}
-            <div class="achievement-icon">${a.icon}</div>
+            <div class="achievement-art">${getAchievementArtHtml(a)}</div>
             <div class="achievement-title">${a.title}</div>
             <div class="achievement-desc">${a.desc}</div>
           </div>
@@ -689,7 +777,7 @@ function renderPerfil(data, uid, isGuest = false) {
           ${ACHIEVEMENTS.slice(0, 8).map((item) => `
             <article class="achievement-card ${achievements[item.id] ? "unlocked" : "locked"}">
               ${!achievements[item.id] ? `<span class="new-badge">NOVA</span>` : ""}
-              <div class="achievement-icon">${item.icon}</div>
+              <div class="achievement-art">${getAchievementArtHtml(item)}</div>
               <div class="achievement-title">${item.title}</div>
               <div class="achievement-desc">${item.desc}</div>
             </article>

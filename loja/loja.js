@@ -12,24 +12,97 @@ import {
 
 let userData = null;
 
+const PROFILE_AVATARS = [
+  {
+    id: "google",
+    name: "Foto do Google",
+    desc: "Use automaticamente sua foto do Google",
+    price: 0,
+    rarity: "common",
+    type: "google",
+    action: "avatar",
+    free: true
+  },
+  {
+    id: "raposa",
+    name: "Raposa Dev",
+    desc: "Raposa Dev ",
+    image: "../assets/avatars/favicon.png",
+    price: 250,
+    rarity: "common",
+    type: "image",
+    action: "avatar"
+  },
+  {
+    id: "astro",
+    name: "Astro Dev",
+    desc: "Astro da Programação",
+    image: "../assets/avatars/astro.jpg",
+    price: 300,
+    rarity: "common",
+    type: "image",
+    action: "avatar"
+  },
+  {
+    id: "Dev",
+    name: "Dev",
+    desc: "Desenvolvedor Cansado",
+    image: "../assets/avatars/dev.jpg",
+    price: 300,
+    rarity: "special",
+    type: "image",
+    action: "avatar"
+  },
+  {
+    id: "Raposa da Copa",
+    name: "Raposa da Copa",
+    desc: "Look de raposa com estilo de copa",
+    image: "../assets/avatars/raposadacopa.jpg",
+    price: 450,
+    rarity: "rare",
+    type: "image",
+    action: "avatar"
+  },
+  {
+    id: "Tirados",
+    name: "Tirados",
+    desc: "Bob esponja e Patrick",
+    image: "../assets/avatars/tirados.webp",
+    price: 400,
+    rarity: "rare",
+    type: "image",
+    action: "avatar"
+  },
+  {
+    id: "Neymar",
+    name: "Neymar Jr",
+    desc: "Look de Neymar Jr com hexa",
+    image: "../assets/avatars/neymarc.png",
+    price: 550,
+    rarity: "rare",
+    type: "image",
+    action: "avatar"
+  },
+  
+];
+
 const ITEMS = {
   items: [
     { id: "heart_pack", icon: "❤️", name: "+5 Vidas", desc: "Recarregue seus corações", price: 80, action: "vidas" },
     { id: "heart_pack3", icon: "💖", name: "+10 Vidas", desc: "Pacote econômico de vidas", price: 140, action: "vidas10" },
-    { id: "rename", icon: "✏️", name: "Trocar Nome", desc: "Mude seu nome de usuário", price: 150, action: "rename" },
-    { id: "streak_shield", icon: "🛡️", name: "Streak Shield", desc: "Protege sua streak por 1 dia", price: 100, action: "shield" },
-    { id: "vip_pass", icon: "✨", name: "VIP Zyro", desc: "Selo VIP e destaque no perfil por 30 dias", price: 900, action: "vip" }
+    { id: "streak_shield", icon: "🛡️", name: "Streak Shield", desc: "Protege sua streak por 1 dia", price: 350, action: "shield" },
+    { id: "rename", icon: "✏️", name: "Trocar Nome", desc: "Mude seu nome de usuário", price: 950, action: "rename" },
   ],
   chars: [
-    { id: "dev_iniciante", icon: "👨‍💻", name: "Dev Iniciante", desc: "Ponto de partida de todo dev", price: 0, action: "char" },
-    { id: "dev_ninja",     icon: "🥷",  name: "Dev Ninja",     desc: "Rápido e silencioso no código", price: 200, action: "char" },
-    { id: "dev_robo",      icon: "🤖",  name: "Dev Robô",      desc: "Preciso como uma máquina", price: 300, action: "char" },
-    { id: "dev_hacker",    icon: "🕵️",  name: "Dev Hacker",    desc: "Vê o que os outros não veem", price: 400, action: "char" },
-    { id: "dev_mestre",    icon: "🧙",  name: "Dev Mestre",    desc: "O ápice da jornada Zyro", price: 600, action: "char" }
+    { id: "dev_iniciante", icon: "👨‍💻", name: "Dev Estudante", desc: "Todo grande dev começou quebrando código e aprendendo com os erros.", price: 0, action: "char" },
+    { id: "dev_ninja",     icon: "👨‍💻",  name: "Dev Estagiário",     desc: "Aprendendo rápido, codando mais rápido ainda.", price: 0, action: "char" },
+    { id: "dev_robo",      icon: "🤴",  name: "Dev Junior",      desc: "Transformando café e bugs em experiência.", price: 0, action: "char" },
+    { id: "dev_hacker",    icon: "🕵️",  name: "Dev Pleno",    desc: "Experiência suficiente pra resolver o caos em silêncio.", price: 0, action: "char" },
+    { id: "dev_mestre",    icon: "🧙",  name: "Dev Senior",    desc: "Onde os problemas acabam e as soluções começam.", price: 0, action: "char" }
   ],
   boost: [
     { id: "xp_boost", icon: "⚡", name: "XP x2", desc: "Dobra seu XP por 24h", price: 250, action: "boost_xp" },
-    { id: "coin_boost", icon: "🪙", name: "Moedas x2", desc: "Dobra moedas por 24h", price: 200, action: "boost_coin" }
+    { id: "coin_boost", icon: "📀", name: "Moedas x2", desc: "Dobra moedas por 24h", price: 200, action: "boost_coin" }
   ]
   ,
   banners: [
@@ -41,16 +114,8 @@ const ITEMS = {
     { id: "itau", name: "Itau", desc: "Imagem do Itau", price: 700, image: "../assets/banners/itau.png", rarity: "legendary", action: "banner" },
     { id: "spot", name: "Spot", desc: "Imagem do Spotify", price: 750, image: "../assets/banners/spot.png", rarity: "mythic", action: "banner" },
     { id: "neymar", name: "Neymar Jr", desc: "Imagem de Neymar Jr e seleção BR", price: 1000, image: "../assets/banners/neymar.png", rarity: "uncommon", action: "banner" }
-  ]
-  ,
-  avatars: [
-    { id: "avatar_default", icon: "👤", name: "Avatar Padrão", desc: "Avatar padrão", price: 0, rarity: "common", action: "avatar" },
-    { id: "dev_laranja", icon: "🧑‍💻", name: "Dev Laranja", desc: "Estilo laranja Zyro", price: 150, rarity: "uncommon", action: "avatar" },
-    { id: "hacker_preto", icon: "🕶️", name: "Hacker Preto", desc: "Look misterioso", price: 250, rarity: "rare", action: "avatar" },
-    { id: "fogo_code", icon: "🔥", name: "Fogo Code", desc: "Fúria flamejante", price: 350, rarity: "epic", action: "avatar" },
-    { id: "ruby_dev", icon: "💎", name: "Ruby Dev", desc: "Toque rubi", price: 500, rarity: "legendary", action: "avatar" },
-    { id: "mestre_zyro", icon: "👑", name: "Mestre Zyro", desc: "Avatar de mestre", price: 800, rarity: "mythic", action: "avatar" }
-  ]
+  ],
+  avatars: PROFILE_AVATARS
 };
 
 const CONSUMABLE_ACTIONS = new Set(["vidas", "vidas10", "rename", "shield", "boost_xp", "boost_coin"]);
@@ -72,11 +137,20 @@ function isVipActive() {
   return date.getTime() > Date.now();
 }
 
+function getSelectedAvatarId(data) {
+  const selected = data.selectedAvatar || data.equippedAvatar || "google";
+  return selected === "avatar_default" ? "google" : selected;
+}
+
+function getAvatarDefinition(id) {
+  return PROFILE_AVATARS.find((avatar) => avatar.id === id) || PROFILE_AVATARS[0];
+}
+
 function isOwned(item) {
   if (item.price === 0) return true;
   if (CONSUMABLE_ACTIONS.has(item.action)) return false;
   if (item.action === "banner") return (userData.ownedBanners || []).includes(item.id);
-  if (item.action === "avatar") return (userData.ownedAvatars || []).includes(item.id);
+  if (item.action === "avatar") return item.id === "google" || (userData.ownedAvatars || []).includes(item.id);
   if (item.action === "char") return (userData.inventario || []).includes(item.id);
   if (item.action === "vip") return isVipActive() || (userData.ownedSpecials || []).includes(item.id);
   return getAllOwnedItems().includes(item.id);
@@ -85,7 +159,7 @@ function isOwned(item) {
 function isEquipped(item) {
   if (item.action === "char") return userData.personagemSelecionado === item.id;
   if (item.action === "banner") return (userData.equippedBanner || "orange_default") === item.id;
-  if (item.action === "avatar") return (userData.equippedAvatar || "avatar_default") === item.id;
+  if (item.action === "avatar") return getSelectedAvatarId(userData) === item.id;
   return false;
 }
 
@@ -150,7 +224,8 @@ function renderShop(tab) {
     return;
   }
 
-  content.innerHTML = `<div class="shop-grid">${items.map(item => {
+  const shopGridClass = tab === "avatars" ? "shop-grid avatars" : "shop-grid";
+  content.innerHTML = `<div class="${shopGridClass}">${items.map(item => {
     const isChar = item.action === "char";
     const isBanner = item.action === "banner";
     const isAvatar = item.action === "avatar";
@@ -185,15 +260,29 @@ function renderShop(tab) {
       </div>`;
     }
 
-    // Special rendering for avatars (circular preview)
+    // Special rendering for avatars (premium profile cards)
     if (isAvatar) {
+      const avatarPreview = item.type === "google"
+        ? userData.photoURL
+          ? `<img src="${userData.photoURL}" alt="Foto do Google" class="avatar-shop-img">`
+          : `<div class="avatar-placeholder">G</div>`
+        : `<img src="${item.image}" alt="${item.name}" class="avatar-shop-img">`;
+
+      const statusLabel = equippedNow ? "Equipado" : owned ? "Comprado" : "";
+
       return `
-      <div class="shop-item ${equippedNow ? 'equipped' : owned ? 'owned' : ''}" style="display:flex;flex-direction:column;align-items:center;padding:16px;">
-        <div class="avatar-preview">${item.icon}</div>
+      <div class="shop-item avatar-card ${equippedNow ? 'equipped' : owned ? 'owned' : ''}">
+        <div class="avatar-image-wrap ${item.type === "google" ? 'avatar-google' : ''}">
+          ${avatarPreview}
+        </div>
         <div class="item-name">${item.name}</div>
         <div class="item-desc">${item.desc}</div>
-        <div class="item-price">${item.price > 0 ? "🪙 " + item.price : "Grátis"}</div>
-        <button class="btn-buy ${btnClass}" data-id="${item.id}" ${disabled ? "disabled" : ""} style="margin-top:8px;">${btnText}</button>
+        <div class="item-meta">
+          <span class="rarity-badge ${item.rarity}">${item.rarity || 'common'}</span>
+          <span class="item-price">${item.price > 0 ? "🪙 " + item.price : "Grátis"}</span>
+        </div>
+        ${statusLabel ? `<div class="avatar-status">${statusLabel}</div>` : ""}
+        <button class="btn-buy ${btnClass}" data-id="${item.id}" ${disabled ? "disabled" : ""}>${btnText}</button>
       </div>`;
     }
 
@@ -265,6 +354,8 @@ async function handleBuy(itemId, tab) {
   }
 
   if (item.action === "avatar") {
+    updates.ownedAvatars = arrayUnion(item.id);
+    updates.selectedAvatar = item.id;
     updates.equippedAvatar = item.id;
   }
 
@@ -305,10 +396,13 @@ async function handleBuy(itemId, tab) {
   if (!owned && item.price > 0) userData.moedas = (userData.moedas || 0) - item.price;
   if (!owned && item.action === "char") userData.inventario = [...new Set([...(userData.inventario || []), item.id])];
   if (!owned && item.action === "banner") userData.ownedBanners = [...new Set([...(userData.ownedBanners || []), item.id])];
-  if (!owned && item.action === "avatar") userData.ownedAvatars = [...new Set([...(userData.ownedAvatars || []), item.id])];
+  if (item.action === "avatar") userData.ownedAvatars = [...new Set([...(userData.ownedAvatars || []), item.id])];
   if (item.action === "char") userData.personagemSelecionado = item.id;
   if (item.action === "banner") userData.equippedBanner = item.id;
-  if (item.action === "avatar") userData.equippedAvatar = item.id;
+  if (item.action === "avatar") {
+    userData.selectedAvatar = item.id;
+    userData.equippedAvatar = item.id;
+  }
   if (item.action === "vidas") userData.vidas = updates.vidas;
   if (item.action === "vidas10") userData.vidas = updates.vidas;
   if (item.action === "rename") {

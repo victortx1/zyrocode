@@ -13,6 +13,14 @@ const CHARS = {
   dev_mestre: "🧙"
 };
 
+function getRankingAvatarSrc(user) {
+  const selectedAvatar = user.selectedAvatar || user.equippedAvatar || "google";
+  const normalizedAvatar = selectedAvatar === "avatar_default" ? "google" : selectedAvatar;
+  const photoSource = user.photoURL || user.foto || "";
+  if (normalizedAvatar === "google") return photoSource;
+  return `../assets/avatars/${normalizedAvatar}`; // extension-less base, try common extensions where used
+}
+
 let currentUser = null;
 let currentIsGuest = false;
 
@@ -93,9 +101,9 @@ function renderRanking(users) {
     if (!u) return "";
     const score = getScore(u);
     const scoreLabel = typeof u.highScore === "number" ? "🏁" : "⚡";
-    return `<div class="podium-item ${pClasses[realIndex]} ${u.uid === currentUser?.uid ? 'is-me' : ''}">
+      return `<div class="podium-item ${pClasses[realIndex]} ${u.uid === currentUser?.uid ? 'is-me' : ''}">
       <div class="podium-medal">${medals[realIndex]}</div>
-      ${u.foto ? `<img src="${u.foto}" class="podium-avatar" alt=""/>` : `<div class="podium-emoji">${charEmoji}</div>`}
+      ${getRankingAvatarSrc(u) ? `<img src="${getRankingAvatarSrc(u)}.png" onerror="this.onerror=null;this.src='${getRankingAvatarSrc(u)}.jpg'" class="podium-avatar" alt=""/>` : `<div class="podium-emoji">${charEmoji}</div>`}
       <div class="podium-name">${u.nickname || u.displayName || u.nome || "Dev"}</div>
       <div class="podium-xp">${scoreLabel} ${score}</div>
       <div class="podium-block">${realIndex + 1}</div>
@@ -109,7 +117,7 @@ function renderRanking(users) {
     const scoreLabel = typeof u.highScore === "number" ? "🏁" : "⚡";
     return `<div class="rank-row ${u.uid === currentUser?.uid ? 'is-me' : ''}">
       <div class="rank-pos">${pos}</div>
-      ${u.foto ? `<img src="${u.foto}" class="rank-avatar" alt=""/>` : `<div class="rank-avatar-emoji">${charEmoji}</div>`}
+      ${getRankingAvatarSrc(u) ? `<img src="${getRankingAvatarSrc(u)}.png" onerror="this.onerror=null;this.src='${getRankingAvatarSrc(u)}.jpg'" class="rank-avatar" alt=""/>` : `<div class="rank-avatar-emoji">${charEmoji}</div>`}
       <div class="rank-info">
         <div class="rank-name">${u.nickname || u.displayName || u.nome || "Dev"} ${u.uid === currentUser?.uid ? "👈" : ""}</div>
         <div class="rank-nivel">Nível ${u.nivel || 1}</div>
