@@ -420,7 +420,7 @@ function getAvatarHtml(data) {
 
   if (avatar.type === "google") {
     if (photoSource) {
-      return `<img src="${photoSource}" class="profile-avatar" alt="Foto do Google">`;
+      return `<img src="${photoSource}" onerror="this.onerror=null;this.src='../assets/avatars/favicon.png'" class="profile-avatar" alt="Foto do Google">`;
     }
 
     const def = AVATAR_MAP.avatar_default;
@@ -432,7 +432,7 @@ function getAvatarHtml(data) {
   }
 
   if (avatar.type === "image" && avatar.image) {
-    return `<img src="${escapeHtml(avatar.image)}" class="profile-avatar" alt="${escapeHtml(avatar.name)}">`;
+    return `<img src="${escapeHtml(avatar.image)}" onerror="this.onerror=null;this.src='../assets/avatars/favicon.png'" class="profile-avatar" alt="${escapeHtml(avatar.name)}">`;
   }
 
   const def = AVATAR_MAP.avatar_default;

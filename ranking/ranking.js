@@ -41,7 +41,7 @@ function normalizeAvatarId(id) {
 function getRankingAvatarSrc(user) {
   const selectedAvatar = normalizeAvatarId(user.selectedAvatar || user.equippedAvatar || "google");
   const photoSource = user.photoURL || user.foto || "";
-  if (selectedAvatar === "google") return photoSource;
+  if (selectedAvatar === "google") return photoSource || "";
   return `../assets/avatars/${selectedAvatar}`;
 }
 
@@ -52,10 +52,19 @@ function renderRankingAvatar(user, className) {
     return `<div class="${className.replace("-avatar", "-avatar-emoji") || "rank-avatar-emoji"}">${charEmoji}</div>`;
   }
 
+  const safeClass = escapeHtml(className);
   const safeBase = escapeHtml(base);
-  const png = `${safeBase}.png`;
-  const jpg = `${safeBase}.jpg`;
-  return `<img src="${png}" onerror="this.onerror=null;this.src='${jpg}'" class="${escapeHtml(className)}" alt=""/>`;
+  const isExternal = /^(https?:)?\/\//i.test(base) || /^data:/i.test(base);
+
+  if (isExternal) {
+    return `<img src="${safeBase}" onerror="this.onerror=null;this.src='../assets/avatars/favicon.png'" class="${safeClass}" alt="Avatar"/>`;
+  }
+
+  if (/\.(png|jpe?g|webp)$/i.test(safeBase)) {
+    return `<img src="${safeBase}" onerror="this.onerror=null;this.src='../assets/avatars/favicon.png'" class="${safeClass}" alt="Avatar"/>`;
+  }
+
+  return `<img src="${safeBase}.png" onerror="this.onerror=null;this.src='${safeBase}.jpg';this.onerror=null;this.src='../assets/avatars/favicon.png'" class="${safeClass}" alt="Avatar"/>`;
 }
 
 let currentUser = null;

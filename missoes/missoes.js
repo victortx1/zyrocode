@@ -41,6 +41,25 @@ function createFreshMissions() {
   return fresh;
 }
 
+function updateMissionHeader() {
+  const dayLabel = document.getElementById("missionsDay");
+  const resetLabel = document.getElementById("missionsReset");
+  if (!dayLabel || !resetLabel) return;
+
+  const now = new Date();
+  const reset = new Date(now);
+  reset.setHours(24, 0, 0, 0);
+  const hours = String(reset.getHours()).padStart(2, "0");
+  const minutes = String(reset.getMinutes()).padStart(2, "0");
+
+  dayLabel.textContent = now.toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "2-digit",
+    month: "2-digit"
+  });
+  resetLabel.textContent = `Próximo reset: ${hours}:${minutes}`;
+}
+
 function showError(msg) {
   const list = document.getElementById("missionsList");
   list.innerHTML = `
@@ -71,6 +90,7 @@ onAuthStateChanged(auth, async (user) => {
       };
 
       missionData = createFreshMissions();
+      updateMissionHeader();
       renderMissions("guest");
       return;
     }
@@ -86,23 +106,42 @@ onAuthStateChanged(auth, async (user) => {
     await initMissions(user.uid);
 
   } catch (error) {
-    console.error("Erro ao carregar missões:", error);
+    console.error("ERRO MISSÕES:", error);
     showError("Não foi possível carregar as missões.");
   }
 });
 
 async function initMissions(uid) {
   const ref = doc(db, "missions", uid);
-  const snap = await getDoc(ref);
+  let snap = null;
   const today = new Date().toDateString();
+
+  try {
+    snap = await getDoc(ref);
+  } catch (error) {
+    console.error("ERRO MISSÕES:", error);
+    missionData = createFreshMissions();
+    updateMissionHeader();
+    renderMissions(uid);
+    return;
+  }
 
   if (!snap.exists() || snap.data().date !== today) {
     missionData = createFreshMissions();
-    await setDoc(ref, missionData);
+    try {
+      await setDoc(ref, missionData);
+    } catch (error) {
+      console.error("ERRO MISSÕES:", error);
+    }
   } else {
     missionData = snap.data();
   }
 
+  if (!missionData || !missionData.daily) {
+    missionData = createFreshMissions();
+  }
+
+  updateMissionHeader();
   const rem = document.getElementById("streakReminder");
   if (rem && (userData.streak || 0) > 0) {
     rem.textContent = `🔥 Sua streak atual é de ${userData.streak} dias! Não quebre!`;
@@ -179,10 +218,15 @@ async function claimMission(missionId, uid) {
   const m = DAILY_MISSIONS.find(x => x.id === missionId);
   if (!m) return;
 
-  const state = missionData.daily[missionId];
+  const state = missionData?.daily?.[missionId];
+  if (!state) {
+    console.error("ERRO COLETAR: estado da missão não encontrado", missionId);
+    return;
+  }
 
   if (!state.done || state.claimed) return;
 
+  // Try cloud first
   try {
     const cloudResult = await claimMissionCloud({ missionId });
     if (cloudResult?.user) {
@@ -193,27 +237,50 @@ async function claimMission(missionId, uid) {
       return;
     }
   } catch (error) {
+    console.error("ERRO COLETAR:", error);
     console.warn("claimMission (cloud) falhou, tentando fluxo legado:", error);
   }
 
-  await updateDoc(doc(db, "missions", uid), {
-    [`daily.${missionId}.claimed`]: true
-  });
+  // Mark claimed locally and update UI immediately
+  try {
+    missionData.daily[missionId].claimed = true;
+    renderMissions(uid);
+  } catch (error) {
+    console.error("ERRO COLETAR:", error);
+  }
+
+  // Persist mission claimed flag
+  try {
+    await updateDoc(doc(db, "missions", uid), {
+      [`daily.${missionId}.claimed`]: true
+    });
+  } catch (error) {
+    console.error("ERRO COLETAR:", error);
+  }
+
+  // Prepare user updates (support multiple coin field names)
+  const coinFields = ["moedas", "coins", "xpCoins"];
+  const coinField = coinFields.find(f => f in userData) || "moedas";
 
   const updates = {};
   if (m.rewardXP) updates.xp = increment(m.rewardXP);
-  if (m.rewardCoins) updates.moedas = increment(m.rewardCoins);
+  if (m.rewardCoins) updates[coinField] = increment(m.rewardCoins);
   if (m.rewardHearts) updates.vidas = Math.min(5, (userData.vidas ?? 5) + m.rewardHearts);
 
-  await updateDoc(doc(db, "users", uid), updates);
+  try {
+    await updateDoc(doc(db, "users", uid), updates);
+  } catch (error) {
+    console.error("ERRO COLETAR:", error);
+  }
 
-  userData.xp = (userData.xp || 0) + (m.rewardXP || 0);
-  userData.moedas = (userData.moedas || 0) + (m.rewardCoins || 0);
-  if (m.rewardHearts) userData.vidas = Math.min(5, (userData.vidas ?? 5) + m.rewardHearts);
-  await syncLeaderboard(uid, userData);
-
-  missionData.daily[missionId].claimed = true;
-  renderMissions(uid);
+  try {
+    userData.xp = (userData.xp || 0) + (m.rewardXP || 0);
+    userData.moedas = (userData.moedas || 0) + (m.rewardCoins || 0);
+    if (m.rewardHearts) userData.vidas = Math.min(5, (userData.vidas ?? 5) + m.rewardHearts);
+    await syncLeaderboard(uid, userData);
+  } catch (error) {
+    console.error("ERRO COLETAR:", error);
+  }
 
   showToast(`🎁 Recompensa coletada!`);
 }

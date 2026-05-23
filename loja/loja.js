@@ -5,6 +5,7 @@ import {
   doc,
   getDoc,
   updateDoc,
+  setDoc,
   arrayUnion,
   increment,
   serverTimestamp
@@ -146,6 +147,29 @@ function getAllOwnedItems() {
   ];
 }
 
+function getSelectedAvatarId(data) {
+  const selected = data?.selectedAvatar || data?.equippedAvatar || data?.selectedAvatar || 'google';
+  return normalizeAvatarId(selected);
+}
+
+function isOwned(item) {
+  if (!userData) return item.price === 0;
+  if (item.price === 0) return true;
+  if (item.action === 'banner') return (userData.ownedBanners || []).includes(item.id);
+  if (item.action === 'avatar') return item.id === 'google' || (userData.ownedAvatars || []).includes(item.id);
+  if (item.action === 'char') return (userData.inventario || []).includes(item.id);
+  if (item.action === 'vip') return userData.vip || (userData.ownedSpecials || []).includes(item.id);
+  return (getAllOwnedItems() || []).includes(item.id);
+}
+
+function isEquipped(item) {
+  if (!userData) return false;
+  if (item.action === 'char') return userData.personagemSelecionado === item.id;
+  if (item.action === 'banner') return normalizeBannerId(userData.equippedBanner) === item.id;
+  if (item.action === 'avatar') return getSelectedAvatarId(userData) === item.id;
+  return false;
+}
+
 function isVipActive() {
   const value = userData.vipUntil;
   if (!value) return false;
@@ -154,79 +178,55 @@ function isVipActive() {
   return date.getTime() > Date.now();
 }
 
-function getSelectedAvatarId(data) {
-  const selected = data.selectedAvatar || data.equippedAvatar || "google";
-  return normalizeAvatarId(selected);
-}
-
-function getAvatarDefinition(id) {
-  return PROFILE_AVATARS.find((avatar) => avatar.id === id) || PROFILE_AVATARS[0];
-}
-
-function isOwned(item) {
-  if (item.price === 0) return true;
-  if (CONSUMABLE_ACTIONS.has(item.action)) return false;
-  if (item.action === "banner") return (userData.ownedBanners || []).includes(item.id);
-  if (item.action === "avatar") return item.id === "google" || (userData.ownedAvatars || []).includes(item.id);
-  if (item.action === "char") return (userData.inventario || []).includes(item.id);
-  if (item.action === "vip") return isVipActive() || (userData.ownedSpecials || []).includes(item.id);
-  return getAllOwnedItems().includes(item.id);
-}
-
-function isEquipped(item) {
-  if (item.action === "char") return userData.personagemSelecionado === item.id;
-  if (item.action === "banner") return normalizeBannerId(userData.equippedBanner) === item.id;
-  if (item.action === "avatar") return getSelectedAvatarId(userData) === item.id;
-  return false;
-}
-
 function syncCoins() {
-  document.getElementById("coinDisplay").textContent = userData.moedas || 0;
+  const disp = document.getElementById("coinDisplay");
+  if (!disp) return;
+  const coins = userData ? (userData.moedas ?? userData.coins ?? userData.xpCoins ?? 0) : 0;
+  disp.textContent = coins;
 }
-
-onAuthStateChanged(auth, async user => {
-  const isGuest = localStorage.getItem("zyroGuest") === "true";
-  
-  if (!user && !isGuest) { window.location.href = "../login/login.html"; return; }
-  
-  if (isGuest) {
-    userData = {
-      uid: "guest",
-      nome: localStorage.getItem("zyroUserName") || "Visitante",
-      moedas: 100,
-      inventario: ["dev_iniciante"],
-      personagemSelecionado: "dev_iniciante"
-    };
-  } else {
-    const snap = await getDoc(doc(db, "users", user.uid));
-    if (!snap.exists()) { window.location.href = "../login/login.html"; return; }
-    userData = { ...snap.data(), uid: user.uid };
-  }
-  
-  document.getElementById("coinDisplay").textContent = userData.moedas || 0;
-  setupTabs();
-  const initialTab = localStorage.getItem('openShopTab') || (location.hash ? location.hash.replace('#','') : 'items');
-  // Clear stored tab after using
-  localStorage.removeItem('openShopTab');
-  // ensure active class on matching tab button
-  document.querySelectorAll('.shop-tab').forEach(t => t.classList.remove('active'));
-  const tabBtn = document.querySelector(`.shop-tab[data-tab="${initialTab}"]`);
-  if (tabBtn) tabBtn.classList.add('active');
-  renderShop(initialTab);
-});
 
 function setupTabs() {
-  document.querySelectorAll(".shop-tab").forEach(tab => {
-    tab.addEventListener("click", () => {
-      document.querySelectorAll(".shop-tab").forEach(t => t.classList.remove("active"));
-      tab.classList.add("active");
-      renderShop(tab.dataset.tab);
-    });
-  });
+  document.querySelectorAll('.shop-tab').forEach(t => t.addEventListener('click', () => {
+    document.querySelectorAll('.shop-tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    renderShop(t.dataset.tab);
+  }));
 }
 
+onAuthStateChanged(auth, async (user) => {
+  try {
+    const isGuest = localStorage.getItem('zyroGuest') === 'true';
+    if (!user && !isGuest) { window.location.href = "../login/login.html"; return; }
+
+    if (isGuest) {
+      userData = { uid: 'guest', nome: localStorage.getItem('zyroUserName') || 'Visitante', moedas: 100, inventario: ['dev_iniciante'], personagemSelecionado: 'dev_iniciante' };
+      setupTabs();
+      const initialTab = localStorage.getItem('openShopTab') || (location.hash ? location.hash.replace('#','') : 'items');
+      localStorage.removeItem('openShopTab');
+      renderShop(initialTab);
+      return;
+    }
+
+    const snap = await getDoc(doc(db, 'users', user.uid));
+    if (!snap.exists()) { window.location.href = "../login/login.html"; return; }
+    userData = { ...snap.data(), uid: user.uid };
+    syncCoins();
+    setupTabs();
+    const initialTab = localStorage.getItem('openShopTab') || (location.hash ? location.hash.replace('#','') : 'items');
+    localStorage.removeItem('openShopTab');
+    renderShop(initialTab);
+  } catch (error) {
+    console.error('ERRO LOJA:', error);
+  }
+});
 function renderShop(tab) {
   const content = document.getElementById("shopContent");
+  if (!content) {
+    console.error("Loja: elemento shopContent não encontrado.");
+    return;
+  }
+
+  const coins = Number(userData.moedas || 0);
   const items = tab === "my-banners"
     ? ITEMS.banners.filter((item) => isOwned(item))
     : ITEMS[tab] || [];
@@ -248,7 +248,7 @@ function renderShop(tab) {
     const isAvatar = item.action === "avatar";
     const owned = isOwned(item);
     const equippedNow = isEquipped(item);
-    const canAfford = (userData.moedas || 0) >= item.price;
+    const canAfford = coins >= item.price;
     const consumable = CONSUMABLE_ACTIONS.has(item.action);
 
     let btnText = "🪙 " + (item.price === 0 ? "Grátis" : item.price);
@@ -323,10 +323,22 @@ async function handleBuy(itemId, tab) {
     alert("❌ Visitantes não podem comprar. Faça login para ter acesso à loja completa!");
     return;
   }
-  
-  const itemList = tab === "my-banners" ? ITEMS.banners : ITEMS[tab];
-  const item = itemList?.find(i => i.id === itemId);
-  if (!item) return;
+
+  // Fallback para múltiplos nomes de campo de moedas
+  const coins = Number(userData.coins ?? userData.moedas ?? userData.xpCoins ?? userData.coinsLocal ?? 0);
+
+  const itemList = tab === "my-banners" ? ITEMS.banners : ITEMS[tab] || [
+    ...ITEMS.items,
+    ...ITEMS.chars,
+    ...ITEMS.avatars,
+    ...ITEMS.banners,
+    ...ITEMS.boost
+  ];
+  const item = itemList.find(i => i.id === itemId);
+  if (!item) {
+    console.error("ERRO COMPRA REAL: item não encontrado", itemId);
+    return;
+  }
 
   const owned = isOwned(item);
   const consumable = CONSUMABLE_ACTIONS.has(item.action);
@@ -336,11 +348,12 @@ async function handleBuy(itemId, tab) {
     return;
   }
 
-  if (!owned && (userData.moedas || 0) < item.price) {
+  if (!owned && coins < item.price) {
     alert("Moedas insuficientes!");
     return;
   }
 
+  // Tenta cloud function primeiro
   try {
     const cloudResult = await purchaseShopItemCloud({ itemId, tab });
     if (cloudResult?.user) {
@@ -351,109 +364,184 @@ async function handleBuy(itemId, tab) {
       return;
     }
   } catch (error) {
-    console.warn("purchaseShopItem (cloud) falhou, tentando fluxo legado:", error);
+    console.error("ERRO COMPRA REAL:", error.code, error.message, error);
+    console.warn("Cloud falhou, tentando fluxo legado...");
     if (error?.code === "functions/failed-precondition") {
       alert("Moedas insuficientes!");
       return;
     }
   }
 
+  // ===== FLUXO DEFENSIVO DE FALLBACK =====
   const ref = doc(db, "users", userData.uid);
-  const updates = {
-    updatedAt: serverTimestamp()
-  };
 
-  if (!owned && item.price > 0) {
-    updates.moedas = increment(-item.price);
-  }
+  try {
+    // PASSO 1: Verificar se documento existe
+    const docSnap = await getDoc(ref);
+    console.log("Documento existe?", docSnap.exists());
 
-  if (!owned && item.action === "char") {
-    updates.inventario = arrayUnion(item.id);
-  }
+    // PASSO 2: Se não existe, criar com estrutura base
+    if (!docSnap.exists()) {
+      console.warn("Documento não existe. Criando com estrutura base...");
+      const baseDoc = {
+        uid: userData.uid,
+        email: userData.email || "",
+        moedas: userData.moedas || 0,
+        coins: userData.coins || 0,
+        xp: userData.xp || 0,
+        nivel: userData.nivel || 1,
+        vidas: userData.vidas || 5,
+        ownedItems: [],
+        ownedBanners: [],
+        ownedAvatars: [],
+        ownedCharacters: [],
+        inventario: userData.inventario || [],
+        personagemSelecionado: userData.personagemSelecionado || "dev_iniciante",
+        equippedBanner: userData.equippedBanner || "zyro-code",
+        selectedAvatar: userData.selectedAvatar || "google",
+        updatedAt: serverTimestamp()
+      };
+      await setDoc(ref, baseDoc);
+      console.log("Documento criado com base.");
+    }
 
-  if (!owned && item.action === "banner") {
-    updates.ownedBanners = arrayUnion(item.id);
-  }
+    // PASSO 3: Preparar updates defensivos
+    const updates = { updatedAt: serverTimestamp() };
 
-  if (!owned && item.action === "avatar") {
-    updates.ownedAvatars = arrayUnion(item.id);
-  }
+    // Detectar qual campo de moedas usar
+    const coinFields = ["coins", "moedas", "xpCoins", "coinsLocal"];
+    const coinField = coinFields.find(f => f in userData) || "moedas";
+    console.log("Campo de moedas detectado:", coinField, "valor:", coins);
 
-  if (item.action === "char") {
-    updates.personagemSelecionado = item.id;
-  }
+    // PASSO 4: Desconto de moedas
+    if (!owned && item.price > 0) {
+      const newCoins = coins - Math.abs(Number(item.price || 0));
+      updates[coinField] = newCoins > 0 ? newCoins : 0;
+      console.log("Novo saldo de moedas:", updates[coinField]);
+    }
 
-  if (item.action === "banner") {
-    updates.equippedBanner = item.id;
-  }
+    // PASSO 5: Atualizar arrays de propriedade
+    if (!owned && item.action === "char") {
+      updates.inventario = arrayUnion(item.id);
+      updates.ownedCharacters = arrayUnion(item.id);
+      console.log("Adicionado personagem:", item.id);
+    }
 
-  if (item.action === "avatar") {
-    updates.ownedAvatars = arrayUnion(item.id);
-    updates.selectedAvatar = item.id;
-    updates.equippedAvatar = item.id;
-  }
+    if (!owned && item.action === "banner") {
+      updates.ownedBanners = arrayUnion(item.id);
+      console.log("Adicionado banner:", item.id);
+    }
 
-  if (item.action === "vidas") {
-    updates.vidas = Math.min(MAX_LIVES, (userData.vidas ?? 5) + 5);
-  }
+    if (!owned && item.action === "avatar") {
+      updates.ownedAvatars = arrayUnion(item.id);
+      updates.selectedAvatar = item.id;
+      updates.equippedAvatar = item.id;
+      console.log("Adicionado avatar:", item.id);
+    }
 
-  if (item.action === "vidas10") {
-    updates.vidas = Math.min(MAX_LIVES_PACK_10, (userData.vidas ?? 5) + 10);
-  }
+    // PASSO 6: Equipar item
+    if (item.action === "char") updates.personagemSelecionado = item.id;
+    if (item.action === "banner") updates.equippedBanner = item.id;
 
-  if (item.action === "rename") {
-    updates.temTrocaNome = true;
-    updates.renameTokens = increment(1);
-    updates.consumables = arrayUnion(item.id);
-  }
+    // PASSO 7: Itens consumíveis
+    if (item.action === "vidas") {
+      updates.vidas = Math.min(MAX_LIVES, (userData.vidas ?? 5) + 5);
+      console.log("Vidas atualizadas para:", updates.vidas);
+    }
+    if (item.action === "vidas10") {
+      updates.vidas = Math.min(MAX_LIVES_PACK_10, (userData.vidas ?? 5) + 10);
+      console.log("Vidas atualizadas para:", updates.vidas);
+    }
 
-  if (item.action === "shield") {
-    updates.streakShield = increment(1);
-    updates.consumables = arrayUnion(item.id);
-  }
+    if (item.action === "rename") {
+      updates.temTrocaNome = true;
+      updates.renameTokens = increment(1);
+      updates.consumables = arrayUnion(item.id);
+    }
 
-  if (item.action === "boost_xp" || item.action === "boost_coin") {
-    const until = new Date(Date.now() + 86400000);
-    updates[`${item.action}_until`] = until;
-    updates.consumables = arrayUnion(item.id);
-  }
+    if (item.action === "shield") {
+      updates.streakShield = increment(1);
+      updates.consumables = arrayUnion(item.id);
+    }
 
-  if (item.action === "vip") {
-    const vipUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-    updates.vip = true;
-    updates.vipUntil = vipUntil;
-    updates.ownedSpecials = arrayUnion(item.id);
-  }
+    if (item.action === "boost_xp" || item.action === "boost_coin") {
+      const until = new Date(Date.now() + 86400000);
+      updates[`${item.action}_until`] = until;
+      updates.consumables = arrayUnion(item.id);
+    }
 
-  await updateDoc(ref, updates);
+    if (item.action === "vip") {
+      const vipUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      updates.vip = true;
+      updates.vipUntil = vipUntil;
+      updates.ownedSpecials = arrayUnion(item.id);
+    }
 
-  if (!owned && item.price > 0) userData.moedas = (userData.moedas || 0) - item.price;
-  await syncLeaderboard(userData.uid, userData);
-  if (!owned && item.action === "char") userData.inventario = [...new Set([...(userData.inventario || []), item.id])];
-  if (!owned && item.action === "banner") userData.ownedBanners = [...new Set([...(userData.ownedBanners || []), item.id])];
-  if (item.action === "avatar") userData.ownedAvatars = [...new Set([...(userData.ownedAvatars || []), item.id])];
-  if (item.action === "char") userData.personagemSelecionado = item.id;
-  if (item.action === "banner") userData.equippedBanner = item.id;
-  if (item.action === "avatar") {
-    userData.selectedAvatar = item.id;
-    userData.equippedAvatar = item.id;
-  }
-  if (item.action === "vidas") userData.vidas = updates.vidas;
-  if (item.action === "vidas10") userData.vidas = updates.vidas;
-  if (item.action === "rename") {
-    userData.temTrocaNome = true;
-    userData.renameTokens = (userData.renameTokens || 0) + 1;
-  }
-  if (item.action === "shield") userData.streakShield = (userData.streakShield || 0) + 1;
-  if (item.action === "vip") {
-    userData.vip = true;
-    userData.vipUntil = updates.vipUntil;
-    userData.ownedSpecials = [...new Set([...(userData.ownedSpecials || []), item.id])];
-  }
+    if (!owned) updates.purchasedItems = arrayUnion(item.id);
 
-  syncCoins();
-  renderShop(tab);
-  showToast(owned ? `✨ ${item.name} equipado!` : `✅ ${item.name} comprado!`);
+    // PASSO 8: Salvar com merge para não deletar campos existentes
+    console.log("Salvando updates com merge:", updates);
+    await setDoc(ref, updates, { merge: true });
+    console.log("Compra salva com sucesso!");
+
+    // PASSO 9: Atualizar userData em memória
+    if (!owned && item.price > 0) {
+      userData[coinField] = (userData[coinField] || 0) - item.price;
+      userData.moedas = userData[coinField];
+    }
+
+    if (!owned && item.action === "char") {
+      userData.inventario = [...new Set([...(userData.inventario || []), item.id])];
+    }
+
+    if (!owned && item.action === "banner") {
+      userData.ownedBanners = [...new Set([...(userData.ownedBanners || []), item.id])];
+    }
+
+    if (item.action === "avatar") {
+      userData.ownedAvatars = [...new Set([...(userData.ownedAvatars || []), item.id])];
+    }
+
+    if (item.action === "char") userData.personagemSelecionado = item.id;
+    if (item.action === "banner") userData.equippedBanner = item.id;
+    if (item.action === "avatar") {
+      userData.selectedAvatar = item.id;
+      userData.equippedAvatar = item.id;
+    }
+
+    if (item.action === "vidas") userData.vidas = updates.vidas;
+    if (item.action === "vidas10") userData.vidas = updates.vidas;
+
+    if (item.action === "rename") {
+      userData.temTrocaNome = true;
+      userData.renameTokens = (userData.renameTokens || 0) + 1;
+    }
+
+    if (item.action === "shield") userData.streakShield = (userData.streakShield || 0) + 1;
+
+    if (item.action === "vip") {
+      userData.vip = true;
+      userData.vipUntil = updates.vipUntil;
+      userData.ownedSpecials = [...new Set([...(userData.ownedSpecials || []), item.id])];
+    }
+
+    // PASSO 10: Atualizar leaderboard (não bloqueia se falhar)
+    try {
+      await syncLeaderboard(userData.uid, userData);
+    } catch (leaderboardError) {
+      console.warn("Leaderboard não sincronizou, mas compra foi salva:", leaderboardError);
+    }
+
+    // PASSO 11: Atualizar UI
+    syncCoins();
+    renderShop(tab);
+    showToast(owned ? `✨ ${item.name} equipado!` : `✅ ${item.name} comprado!`);
+
+  } catch (error) {
+    console.error("ERRO COMPRA REAL:", error.code, error.message, error);
+    console.error("Stack:", error.stack);
+    alert("Erro ao salvar a compra. Veja o console para mais detalhes.");
+  }
 }
 
 function showToast(msg) {
