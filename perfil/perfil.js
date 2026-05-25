@@ -322,7 +322,8 @@ function escapeHtml(value = "") {
     .replaceAll("'", "&#039;");
 }
 
-function showToast(message, type = "info", duration = 2800) {
+function showToast(messageKey, type = "info", duration = 2800, params = {}) {
+  const message = ZyroPrefs.t(messageKey, params);
   let toast = document.getElementById("toast-notification");
 
   if (!toast) {
@@ -459,7 +460,7 @@ function showEditNameModal(userData, uid, onSave) {
     modal.innerHTML = `
       <div class="modal-content">
         <div class="modal-header">
-          <h3>Troca de nome bloqueada</h3>
+          <h3 data-i18n="profile.name_change_blocked_title">Troca de nome bloqueada</h3>
           <button class="modal-close" id="modalClose">×</button>
         </div>
 
@@ -540,7 +541,7 @@ function showCountryModal(uid, force = false) {
   modal.innerHTML = `
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Escolha seu país</h3>
+        <h3 data-i18n="profile.choose_country">Escolha seu país</h3>
         ${force ? "" : `<button class="modal-close" id="countryClose">×</button>`}
       </div>
 
@@ -584,10 +585,13 @@ function showCountryModal(uid, force = false) {
         await syncLeaderboard(uid, freshData);
         renderPerfil(freshData, uid, false);
 
-        showToast(`País atualizado para ${country.flag} ${country.name}`, "success");
+        showToast("profile.country_updated", "success", 2800, {
+          flag: country.flag,
+          name: country.name
+        });
       } catch (error) {
         console.error("Erro ao salvar país:", error);
-        showToast("Erro ao salvar país.", "error");
+        showToast("profile.country_error", "error");
       }
     };
   });
@@ -1059,7 +1063,7 @@ function bindProfileEvents(data, uid, isGuest) {
           await syncLeaderboard(uid, freshData);
           renderPerfil(freshData, uid, false);
 
-          showToast("Apelido atualizado com sucesso.", "success");
+          showToast("profile.name_updated", "success"); 
         } catch (error) {
           console.error("Erro ao salvar apelido:", error);
           showToast("Erro ao salvar apelido.", "error");
