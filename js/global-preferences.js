@@ -39,7 +39,19 @@
       'music.none': 'Nenhuma',
       'music.1': 'Música 1',
       'music.2': 'Música 2',
-      'music.3': 'Música 3'
+      'music.3': 'Música 3',
+      // Perfil
+      'profile.title': 'Perfil',
+      'profile.loading': 'Carregando perfil...',
+      'profile.share_title': 'Compartilhar app',
+      'profile.settings_title': 'Configurações',
+      'profile.country_updated': 'País atualizado para {flag} {name}',
+      'profile.country_error': 'Erro ao salvar país',
+      'profile.name_updated': 'Apelido atualizado com sucesso',
+      'profile.name_change_blocked_title': 'Troca de nome bloqueada',
+      'profile.choose_country': 'Escolha seu país',
+      'profile.error_title': 'Erro no perfil',
+      'profile.error_return': 'Voltar para login'
     },
     en: {
       'prefs.title': 'Preferences',
@@ -57,7 +69,19 @@
       'music.none': 'None',
       'music.1': 'Music 1',
       'music.2': 'Music 2',
-      'music.3': 'Music 3'
+      'music.3': 'Music 3',
+      // Profile
+      'profile.title': 'Profile',
+      'profile.loading': 'Loading profile...',
+      'profile.share_title': 'Share app',
+      'profile.settings_title': 'Settings',
+      'profile.country_updated': 'Country updated to {flag} {name}',
+      'profile.country_error': 'Error saving country',
+      'profile.name_updated': 'Nickname updated successfully',
+      'profile.name_change_blocked_title': 'Name change blocked',
+      'profile.choose_country': 'Choose your country',
+      'profile.error_title': 'Profile error',
+      'profile.error_return': 'Back to login'
     },
     es: {
       'prefs.title': 'Preferencias',
@@ -75,7 +99,19 @@
       'music.none': 'Ninguna',
       'music.1': 'Música 1',
       'music.2': 'Música 2',
-      'music.3': 'Música 3'
+      'music.3': 'Música 3',
+      // Perfil
+      'profile.title': 'Perfil',
+      'profile.loading': 'Cargando perfil...',
+      'profile.share_title': 'Compartir app',
+      'profile.settings_title': 'Ajustes',
+      'profile.country_updated': 'País actualizado a {flag} {name}',
+      'profile.country_error': 'Error al guardar país',
+      'profile.name_updated': 'Apodo actualizado correctamente',
+      'profile.name_change_blocked_title': 'Cambio de nombre bloqueado',
+      'profile.choose_country': 'Elige tu país',
+      'profile.error_title': 'Error en el perfil',
+      'profile.error_return': 'Volver al login'
     }
   };
 
