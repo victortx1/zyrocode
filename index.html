@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <link rel="shortcut icon" href="./assets/fotos/favicon.png" type="image/png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ZYRO CODE — Lobby</title>
+  <title data-i18n="title.lobby">ZYRO CODE — Lobby</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="./guide.css" />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
@@ -12,7 +12,7 @@
 <body>
   
   <header class="topbar">
-    <div class="topbar-brand">⚡ <span>ZYRO</span>CODE</div>
+    <div class="topbar-brand">⚡ <span data-i18n="app.name">ZYRO</span><span data-i18n="app.suffix">CODE</span></div>
 
     <div class="topbar-stats">
       <div class="stat" id="statStreak">🔥 <span id="streakVal">0</span></div>
@@ -34,9 +34,9 @@
   <main class="lobby">
     <section class="learning-hero">
       <div>
-        <span class="eyebrow">Cursos</span>
-        <h1>Módulos Zyro</h1>
-        <p>Escolha um módulo, avance pelos cursos e conclua as aulas com 5 respostas corretas.</p>
+        <span class="eyebrow" data-i18n="lobby.courses">Cursos</span>
+        <h1 data-i18n="lobby.modules_title">Módulos Zyro</h1>
+        <p data-i18n="lobby.modules_desc">Escolha um módulo, avance pelos cursos e conclua as aulas com 5 respostas corretas.</p>
       </div>
     </section>
 
@@ -83,6 +83,12 @@
   </div>
 
   <script src="js/global-preferences.js"></script>
+  <script>
+    // Aplica traduções assim que o DOM carregar
+    document.addEventListener('DOMContentLoaded', () => {
+      ZyroPrefs.applyTranslations();
+    });
+  </script>
   <script type="module" src="app.js"></script>
   <script type="module" src="./guide.js"></script>
 </body>
