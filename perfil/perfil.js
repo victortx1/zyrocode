@@ -1006,7 +1006,7 @@ function bindProfileEvents(data, uid, isGuest) {
   const btnAddFriends = document.getElementById("btnAddFriends");
   if (btnAddFriends) {
     btnAddFriends.onclick = () => {
-      showToast("Sistema de amigos em desenvolvimento.", "info");
+      showToast("profile.friends_development", "info");
     };
   }
 
@@ -1015,9 +1015,9 @@ function bindProfileEvents(data, uid, isGuest) {
     btnShare.onclick = async () => {
       try {
         await navigator.clipboard.writeText(window.location.href);
-        showToast("Link do perfil copiado.", "success");
+        showToast("profile.share_copied", "success");
       } catch {
-        showToast("Não foi possível copiar o link.", "warning");
+        showToast("profile.share_error", "warning");
       }
     };
   }
@@ -1084,7 +1084,7 @@ function bindProfileEvents(data, uid, isGuest) {
       localStorage.removeItem("zyroGuest");
       localStorage.removeItem("zyroUserName");
       await signOut(auth);
-      showToast("Até logo!", "info", 1000);
+      showToast("profile.goodbye", "info", 1000);
 
       setTimeout(() => {
         window.location.href = "../login/login.html";

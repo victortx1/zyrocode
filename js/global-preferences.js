@@ -52,7 +52,11 @@
       'profile.choose_country': 'Escolha seu país',
       'profile.error_title': 'Erro no perfil',
       'profile.error_return': 'Voltar para login',
-      'profile.error_console': 'Erro no perfil. Veja o console.'
+      'profile.error_console': 'Erro no perfil. Veja o console.',
+      'profile.error_default': 'Ocorreu um erro',
+      'profile.guest_warning': 'Faça login para usar esta função',
+      'profile.share_copied': 'Link copiado',
+      'profile.share_error': 'Não foi possível copiar'
     },
     en: {
       'prefs.title': 'Preferences',
