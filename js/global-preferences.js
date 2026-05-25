@@ -196,8 +196,48 @@
 
   // i18n
   window.ZYRO_I18N = I18N;
-  function applyTranslations(){ const dict = I18N[state.lang] || I18N[DEFAULTS.lang]; document.querySelectorAll('[data-i18n]').forEach(el=>{ const key = el.getAttribute('data-i18n'); if(!key) return; const txt = dict && dict[key] ? dict[key] : key; el.textContent = txt; }); }
-  window.setZyroLanguage = function(lang){ state.lang = lang || DEFAULTS.lang; save(STORAGE.lang, state.lang); document.documentElement.lang = state.lang; applyTranslations(); };
+  function applyTranslations() {
+    const dict = I18N[state.lang] || I18N[DEFAULTS.lang];
+    document.documentElement.lang = state.lang;
+    
+    // Update all static texts
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      const attr = el.getAttribute('data-i18n-attr') || 'textContent';
+      if (!key) return;
+      
+      const txt = dict && dict[key] ? dict[key] : key;
+      if (attr === 'textContent') {
+        el.textContent = txt;
+      } else {
+        el.setAttribute(attr, txt);
+      }
+    });
+
+    // Dispatch event for dynamic content
+    window.dispatchEvent(new CustomEvent('languageChanged', {
+      detail: { language: state.lang }
+    }));
+  }
+
+  window.setZyroLanguage = function(lang) { 
+    state.lang = lang || DEFAULTS.lang; 
+    save(STORAGE.lang, state.lang); 
+    applyTranslations();
+  };
+
+  // New method
+  window.ZyroPrefs.t = function(key, params = {}) {
+    const dict = I18N[state.lang] || I18N[DEFAULTS.lang];
+    let txt = dict && dict[key] ? dict[key] : key;
+    
+    // Simple templating {key} replacement
+    for (const [k, v] of Object.entries(params)) {
+      txt = txt.replace(new RegExp(`{${k}}`, 'g'), v);
+    }
+    
+    return txt;
+  };
   window.applyZyroTranslations = applyTranslations;
 
   function init(){ load(); applyTheme(state.theme); applyPerformance(state.performance); document.documentElement.lang = state.lang; applyTranslations(); if (state.sounds) { const src = MUSIC_FILES[state.music]; if (src) createAudio(src); } }
