@@ -14,8 +14,11 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { syncLeaderboard } from "../js/leaderboard-sync.js";
 import { equipCosmetic as equipCosmeticCloud } from "../js/game-api.js";
+import { ACHIEVEMENT_GROUPS } from "./conquistas.js";
 
 const wrap = document.getElementById("perfilWrap");
+window.ZYRO_ACHIEVEMENT_GROUPS = ACHIEVEMENT_GROUPS;
+window.ZyroPrefs?.registerAchievements?.(ACHIEVEMENT_GROUPS);
 
 const DEFAULT_BANNER_ID = "zyro-code";
 const NICKNAME_MIN = 2;
@@ -245,34 +248,15 @@ const COUNTRIES = {
   in: { name: "Índia", flag: "🇮🇳" }
 };
 
-const ACHIEVEMENTS = buildAchievements();
+Object.assign(COUNTRIES, {
+  kr: { name: "Coreia do Sul", flag: "🇰🇷" },
+  cn: { name: "China", flag: "🇨🇳" },
+  ao: { name: "Angola", flag: "🇦🇴" },
+  mz: { name: "Moçambique", flag: "🇲🇿" },
+  cv: { name: "Cabo Verde", flag: "🇨🇻" }
+});
 
-function buildAchievements() {
-  const base = [
-    { id: "novo_membro", icon: "⚡", title: "Novo Membro", desc: "Entrou para a comunidade Zyro Code", image: "" },
-    { id: "first_step", icon: "🧑‍💻", title: "Primeiro Passo", desc: "Complete sua primeira aula", image: "" },
-    { id: "explorer", icon: "🤠", title: "Explorador", desc: "Complete 5 aulas", image: "" },
-    { id: "on_fire", icon: "🔥", title: "Fogo!", desc: "Mantenha 7 dias de sequência", image: "" },
-    { id: "dedicated", icon: "🏆", title: "Dedicado", desc: "Complete 20 aulas", image: "" },
-    { id: "html_master", icon: "🌐", title: "Mestre HTML", desc: "Termine o módulo HTML", image: "" },
-    { id: "xp_strong", icon: "⚡", title: "XP Forte", desc: "Alcance 1000 XP", image: "" }
-  ];
-
-  const icons = ["🔥", "⚡", "🏆", "💎", "🚀", "🎯", "👑", "🧠", "💻", "📚", "🛡️", "🌟"];
-  const extras = [];
-
-  for (let i = 7; i <= 120; i++) {
-    extras.push({
-      id: `achievement_${i}`,
-      icon: icons[i % icons.length],
-      title: `Conquista ${i}`,
-      desc: `Complete o desafio especial número ${i}.`,
-      image: ""
-    });
-  }
-
-  return [...base, ...extras];
-}
+const ACHIEVEMENTS = ACHIEVEMENT_GROUPS.flatMap((group) => group.items || []);
 
 const motivationMap = {
   professional: "Quero me tornar desenvolvedor",
@@ -362,6 +346,7 @@ function formatJoinDate(data) {
 }
 
 function getCountryInfo(data) {
+  if (data.countryCode && COUNTRIES[data.countryCode]) return COUNTRIES[data.countryCode];
   if (data.country && COUNTRIES[data.country]) return COUNTRIES[data.country];
 
   if (data.countryFlag) {
@@ -386,6 +371,10 @@ function getLeagueByXp(xpValue = 0) {
   }
 
   return selected;
+}
+
+function getFollowersCount(data = {}) {
+  return Number(data.followers ?? data.seguidores ?? data.followersCount ?? data.stats?.followers ?? 0);
 }
 
 function getBannerById(id = DEFAULT_BANNER_ID) {
@@ -573,6 +562,7 @@ function showCountryModal(uid, force = false) {
       try {
         await updateDoc(doc(db, "users", uid), {
           country: code,
+          countryCode: code,
           countryName: country.name,
           countryFlag: country.flag,
           updatedAt: serverTimestamp()
@@ -604,12 +594,13 @@ function getAchievementArtHtml(item) {
         src="${escapeHtml(item.image)}"
         alt="${escapeHtml(item.title)}"
         class="achievement-img"
-        onerror="this.replaceWith(Object.assign(document.createElement('span'), { className: 'achievement-icon-fallback', textContent: '${escapeHtml(item.icon)}' }))"
+        loading="lazy"
+        onerror="this.closest('.achievement-art').classList.add('image-error')"
       />
     `;
   }
 
-  return `<span class="achievement-icon-fallback">${item.icon}</span>`;
+  return `<span class="achievement-icon-fallback">?</span>`;
 }
 
 function showAllAchievementsModal(userAchievements = {}) {
@@ -708,6 +699,7 @@ function showBannerModal(data, uid) {
             modal.classList.remove("active");
             const snap = await getDoc(doc(db, "users", uid));
             const freshData = { ...snap.data(), ...cloudResult.user };
+            await window.ZyroPrefs?.update?.({ selectedBanner: bannerId });
             await syncLeaderboard(uid, freshData);
             renderPerfil(freshData, uid, false);
             showToast("Banner equipado com sucesso.", "success");
@@ -719,9 +711,11 @@ function showBannerModal(data, uid) {
         if (applied) return;
 
         await updateDoc(doc(db, "users", uid), {
+          selectedBanner: bannerId,
           equippedBanner: bannerId,
           updatedAt: serverTimestamp()
         });
+        await window.ZyroPrefs?.update?.({ selectedBanner: bannerId });
 
         modal.classList.remove("active");
 
@@ -739,11 +733,12 @@ function showBannerModal(data, uid) {
 }
 
 function renderPerfil(data, uid, isGuest = false) {
+  window.ZyroPlayerData = { ...data, uid, isGuest };
   const displayName = data.nickname || data.displayName || data.nome || "Jogador";
   const personagem = data.personagemSelecionado || "dev_iniciante";
   const country = getCountryInfo(data);
   const joinDate = formatJoinDate(data);
-  const equippedBanner = getBannerById(data.equippedBanner);
+  const equippedBanner = getBannerById(data.selectedBanner || data.equippedBanner);
   const achievements = {
     novo_membro: true,
     ...(data.achievements || {})
@@ -826,6 +821,22 @@ function renderPerfil(data, uid, isGuest = false) {
         </div>
 
         <div class="stat-card">
+          <div class="stat-icon">${country.flag}</div>
+          <div>
+            <div class="stat-value">${escapeHtml(country.name)}</div>
+            <div class="stat-label">Bandeira</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">👥</div>
+          <div>
+            <div class="stat-value">${getFollowersCount(data)}</div>
+            <div class="stat-label">Seguidores</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
           <div class="stat-icon">🏅</div>
           <div>
             <div class="stat-value">${Number(data.top3 || 0)}</div>
@@ -840,16 +851,7 @@ function renderPerfil(data, uid, isGuest = false) {
           <button class="section-link" id="btnViewAllAchievements">Ver todas</button>
         </div>
 
-        <div class="achievements-scroll">
-          ${ACHIEVEMENTS.slice(0, 8).map((item) => `
-            <article class="achievement-card ${achievements[item.id] ? "unlocked" : "locked"}">
-              ${!achievements[item.id] ? `<span class="new-badge">NOVA</span>` : ""}
-              <div class="achievement-art">${getAchievementArtHtml(item)}</div>
-              <div class="achievement-title">${item.title}</div>
-              <div class="achievement-desc">${item.desc}</div>
-            </article>
-          `).join("")}
-        </div>
+        <div class="achievements-scroll" id="achievementsPreview"></div>
       </div>
 
       <div class="extra-profile">
@@ -977,8 +979,9 @@ function renderPerfil(data, uid, isGuest = false) {
   `;
 
   bindProfileEvents(data, uid, isGuest);
+  window.renderAchievementsPreview?.({ ...data, achievements });
 
-  if (!isGuest && !data.country) {
+  if (!isGuest && !data.country && !data.countryCode && !data.countryFlag) {
     setTimeout(() => {
       showCountryModal(uid, true);
     }, 700);
@@ -1168,7 +1171,12 @@ onAuthStateChanged(auth, async (user) => {
         vidas: 5,
         personagemSelecionado: "dev_iniciante",
         aulasConcluidas: [],
-        equippedBanner: DEFAULT_BANNER_ID
+        selectedBanner: localStorage.getItem("zyroEquippedBanner") || DEFAULT_BANNER_ID,
+        equippedBanner: localStorage.getItem("zyroEquippedBanner") || DEFAULT_BANNER_ID,
+        country: localStorage.getItem("zyroCountry") || localStorage.getItem("zyroCountryCode") || "",
+        countryCode: localStorage.getItem("zyroCountryCode") || localStorage.getItem("zyroCountry") || "",
+        countryName: localStorage.getItem("zyroCountryName") || "",
+        countryFlag: localStorage.getItem("zyroCountryFlag") || ""
       }, "guest", true);
 
       return;

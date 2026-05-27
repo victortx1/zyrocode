@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -13,60 +13,55 @@
 <body>
   <main class="settings-page">
     <header class="settings-header">
-      <h1>Configurações</h1>
-      <button id="btnDone" class="done-btn">Pronto</button>
+      <div>
+        <p class="settings-tag" data-i18n="settings.config">Configurações ZYRO CODE</p>
+        <h1 data-i18n="settings.menu">Menu de configurações</h1>
+      </div>
+      <button id="btnDone" class="done-btn" data-i18n="settings.back">Perfil</button>
     </header>
 
     <section class="settings-list" aria-label="Lista de configurações">
-      <button class="settings-item" data-action="soon">
-        <span>Preferências</span>
-        <span class="settings-arrow">&gt;</span>
-      </button>
-
-      <button class="settings-item" data-action="profile">
-        <span>Perfil</span>
-        <span class="settings-arrow">&gt;</span>
-      </button>
-
-      <button class="settings-item" data-action="soon">
-        <span>Notificações</span>
-        <span class="settings-arrow">&gt;</span>
-      </button>
-
-      <button class="settings-item" data-action="soon">
-        <span>Cursos</span>
-        <span class="settings-arrow">&gt;</span>
-      </button>
-
-      <button class="settings-item" data-action="soon">
-        <span>Contas em redes sociais</span>
-        <span class="settings-arrow">&gt;</span>
-      </button>
-
-      <button class="settings-item" data-action="soon">
-        <span>Configurações de privacidade</span>
-        <span class="settings-arrow">&gt;</span>
-      </button>
-
-      <button class="settings-item" data-action="soon">
-        <span>Central de Ajuda</span>
-        <span class="settings-arrow">&gt;</span>
-      </button>
-
-      <button class="settings-item" data-action="feedback">
-        <span>Fazer comentários</span>
-        <span class="settings-arrow">&gt;</span>
-      </button>
-
-      <button class="settings-item danger" data-action="logout">
-        <span>Sair</span>
-        <span class="settings-arrow">&gt;</span>
+      <a class="settings-item" href="preferencias.html">
+        <span data-i18n="prefs.title">Preferências</span>
+        <span class="settings-arrow">›</span>
+      </a>
+      <a class="settings-item" href="perfil-config.html">
+        <span data-i18n="settings.profile">Perfil</span>
+        <span class="settings-arrow">›</span>
+      </a>
+      <a class="settings-item" href="notificacoes.html">
+        <span data-i18n="settings.notifications">Notificações</span>
+        <span class="settings-arrow">›</span>
+      </a>
+      <a class="settings-item" href="cursos-config.html">
+        <span data-i18n="settings.courses">Cursos</span>
+        <span class="settings-arrow">›</span>
+      </a>
+      <a class="settings-item" href="redes-sociais.html">
+        <span data-i18n="settings.social">Contas em redes sociais</span>
+        <span class="settings-arrow">›</span>
+      </a>
+      <a class="settings-item" href="privacidade.html">
+        <span data-i18n="settings.privacy">Privacidade</span>
+        <span class="settings-arrow">›</span>
+      </a>
+      <a class="settings-item" href="ajuda.html">
+        <span data-i18n="settings.help">Central de Ajuda</span>
+        <span class="settings-arrow">›</span>
+      </a>
+      <a class="settings-item" href="comentarios.html">
+        <span data-i18n="settings.comments">Fazer comentários</span>
+        <span class="settings-arrow">›</span>
+      </a>
+      <button class="settings-item danger" id="logoutButton">
+        <span data-i18n="settings.logout">Sair</span>
+        <span class="settings-arrow">›</span>
       </button>
     </section>
   </main>
 
   <div id="settingsToast" class="settings-toast" role="status"></div>
-
+  <script type="module" src="../js/global-preferences.js"></script>
   <script type="module" src="configuracoes.js"></script>
 </body>
 </html>

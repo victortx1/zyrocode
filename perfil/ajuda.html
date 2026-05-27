@@ -1,0 +1,59 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Central de Ajuda | ZYRO CODE</title>
+  <link rel="stylesheet" href="ajuda.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <main class="config-page">
+    <header class="config-header">
+      <button id="btnBack" class="icon-btn" aria-label="Voltar">←</button>
+      <div>
+        <p class="section-label">Central de Ajuda</p>
+        <h1 data-i18n="help.title">Precisa de suporte?</h1>
+        <p class="section-description">Encontre respostas rápidas, guias e fale diretamente com o nosso time.</p>
+      </div>
+    </header>
+
+    <section class="config-content">
+      <div class="card">
+        <h2>Perguntas frequentes</h2>
+        <details open>
+          <summary>Como recuperar minha senha?</summary>
+          <p>Vá para a tela de login e use o link "Esqueceu a senha" para redefinir seu acesso.</p>
+        </details>
+        <details>
+          <summary>Como atualizar meu e-mail?</summary>
+          <p>Use o painel de perfil para alterar suas informações e confirme o novo e-mail quando solicitado.</p>
+        </details>
+        <details>
+          <summary>Como ativar notificações?</summary>
+          <p>Em Notificações, habilite alertas e configure o período de silêncio conforme seu horário.</p>
+        </details>
+      </div>
+
+      <div class="card">
+        <h2>Guias rápidos</h2>
+        <ul class="help-list">
+          <li>Comece pelo onboarding e personalize seu perfil.</li>
+          <li>Use conquistas para desbloquear conteúdo exclusivo.</li>
+          <li>Confira ranking e progressos em tempo real.</li>
+        </ul>
+      </div>
+
+      <div class="card contact-card">
+        <h2>Fale com o suporte</h2>
+        <p class="card-text">Envie dúvidas ou sugestões para nossa equipe. Normalmente respondemos em até 24 horas.</p>
+        <button id="contactSupport" class="secondary-button">Abrir chat de suporte</button>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status"></div>
+  <script type="module" src="../js/global-preferences.js"></script>
+  <script type="module" src="ajuda.js"></script>
+</body>
+</html>

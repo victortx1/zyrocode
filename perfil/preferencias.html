@@ -1,0 +1,101 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Preferências | ZYRO CODE</title>
+  <link rel="stylesheet" href="preferencias.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <main class="config-page">
+    <header class="config-header">
+      <button id="btnBack" class="icon-btn" aria-label="Voltar">←</button>
+      <div>
+        <p class="section-label" data-i18n="prefs.title">Preferências</p>
+        <h1 data-i18n="prefs.headline">Personalize seu ZYRO CODE</h1>
+        <p class="section-description" data-i18n="prefs.description">Ajuste o visual, som, idioma e desempenho do aplicativo.</p>
+      </div>
+    </header>
+
+    <section class="config-content">
+      <div class="card">
+        <h2 data-i18n="prefs.theme">Tema</h2>
+        <div class="theme-grid">
+          <label class="theme-pill">
+            <input type="radio" name="theme" value="light" />
+            <span data-i18n="theme.light">Claro</span>
+          </label>
+          <label class="theme-pill">
+            <input type="radio" name="theme" value="dark" />
+            <span data-i18n="theme.dark">Escuro</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 data-i18n="prefs.color">Cor principal</h2>
+        <div class="color-row">
+          <input type="color" id="primaryColor" value="#ff7b00" aria-label="Cor principal" />
+          <div class="color-preview" id="colorPreview"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 data-i18n="prefs.shortcuts">Áudio e interação</h2>
+        <div class="switch-list">
+          <label class="switch-row">
+            <span data-i18n="music.enabled">Música de fundo</span>
+            <input type="checkbox" id="prefMusicEnabled" />
+          </label>
+
+          <label class="switch-row switch-row-stack">
+            <span data-i18n="music.label">Música do app</span>
+            <select id="musicSelect">
+              <option value="none" data-i18n="music.none">Nenhuma</option>
+              <option value="music1" data-i18n="music.1">Música 1</option>
+              <option value="music2" data-i18n="music.2">Música 2</option>
+              <option value="music3" data-i18n="music.3">Música 3</option>
+            </select>
+          </label>
+
+          <label class="switch-row switch-row-stack">
+            <span data-i18n="music.volume">Volume</span>
+            <input type="range" id="musicVolume" min="0" max="1" step="0.01" value="0.28" />
+          </label>
+
+          <label class="switch-row">
+            <span data-i18n="sound.label">Efeitos sonoros</span>
+            <input type="checkbox" id="prefSounds" />
+          </label>
+
+          <label class="switch-row">
+            <span data-i18n="vibration.label">Vibração</span>
+            <input type="checkbox" id="prefVibration" />
+          </label>
+
+          <label class="switch-row">
+            <span data-i18n="performance.label">Animações reduzidas</span>
+            <input type="checkbox" id="prefPerformance" />
+          </label>
+        </div>
+      </div>
+
+      <div class="card language-card">
+        <h2 data-i18n="prefs.language">Idioma</h2>
+        <select id="languageSelect">
+          <option value="pt">Português</option>
+          <option value="en">English</option>
+          <option value="es">Español</option>
+        </select>
+      </div>
+    </section>
+
+    <button class="btn-primary btn-save" id="saveBtn" data-i18n="save.button">Salvar configurações</button>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="../js/global-preferences.js"></script>
+  <script type="module" src="preferencias.js"></script>
+</body>
+</html>

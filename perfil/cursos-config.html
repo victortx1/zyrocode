@@ -1,0 +1,64 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cursos | ZYRO CODE</title>
+  <link rel="stylesheet" href="cursos-config.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <main class="config-page">
+    <header class="config-header">
+      <button id="btnBack" class="icon-btn" aria-label="Voltar">←</button>
+      <div>
+        <p class="section-label">Cursos</p>
+        <h1 data-i18n="courses.title">Ajuste o seu conteúdo</h1>
+        <p class="section-description">Ative recomendações, conteúdo automático e defina como você deseja aprender.</p>
+      </div>
+    </header>
+
+    <section class="config-content">
+      <div class="card">
+        <h2>Preferências de curso</h2>
+        <div class="switch-list">
+          <label class="switch-row">Recomendações personalizadas <input type="checkbox" data-key="recommendations" /></label>
+          <label class="switch-row">Progresso automático <input type="checkbox" data-key="autoProgress" /></label>
+          <label class="switch-row">Módulos em destaque <input type="checkbox" data-key="highlightModules" /></label>
+          <label class="switch-row">Aulas rápidas <input type="checkbox" data-key="quickLessons" /></label>
+          <label class="switch-row">Modo revisão <input type="checkbox" data-key="reviewMode" /></label>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Atualização</h2>
+        <label class="input-row">Nível de dificuldade preferido
+          <select id="courseDifficulty">
+            <option value="beginner">Iniciante</option>
+            <option value="intermediate">Intermediário</option>
+            <option value="advanced">Avançado</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="card">
+        <h2>Aprendizado</h2>
+        <label class="input-row">Tempo de estudo diário
+          <select id="dailyStudyTime">
+            <option value="15">15 minutos</option>
+            <option value="30">30 minutos</option>
+            <option value="60">1 hora</option>
+            <option value="120">2 horas</option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <button class="btn-primary btn-save" id="saveBtn">Salvar configurações</button>
+  </main>
+
+  <div id="toast" class="toast" role="status"></div>
+  <script type="module" src="../js/global-preferences.js"></script>
+  <script type="module" src="cursos-config.js"></script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -15,7 +15,7 @@
         <div class="progress-fill" id="progressFill"></div>
       </div>
       <div class="progress-text">
-        <span id="progressStep">1</span> de <span id="progressTotal">7</span>
+        <span id="progressStep">1</span> <span data-i18n="onboarding.of">de</span> <span id="progressTotal">7</span>
       </div>
     </div>
 
@@ -25,7 +25,7 @@
       <div class="robot-container">
         <div class="robot">🤖</div>
         <div class="robot-bubble" id="robotBubble">
-          Bem-vindo ao ZYRO CODE!
+          <span data-i18n="onboarding.welcome">Bem-vindo ao ZYRO CODE!</span>
         </div>
       </div>
 
@@ -39,10 +39,10 @@
       <!-- ACTION BUTTONS -->
       <div class="action-buttons">
         <button class="btn btn-secondary" id="btnPrev" style="display: none;">
-          ← Anterior
+          <span data-i18n="onboarding.prev">← Anterior</span>
         </button>
         <button class="btn btn-primary" id="btnNext">
-          Próximo →
+          <span data-i18n="onboarding.next">Próximo →</span>
         </button>
       </div>
     </div>
@@ -50,10 +50,11 @@
     <!-- LOADING OVERLAY -->
     <div class="loading-overlay" id="loadingOverlay" style="display: none;">
       <div class="spinner"></div>
-      <p>Salvando seu perfil...</p>
+      <p data-i18n="onboarding.saving">Salvando seu perfil...</p>
     </div>
   </div>
 
+  <script type="module" src="../js/global-preferences.js"></script>
   <script type="module" src="onboarding.js"></script>
 </body>
 </html>

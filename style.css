@@ -2,18 +2,18 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #050505;
-  --bg2: #0d0d0d;
-  --card: #141414;
+  --bg: var(--app-bg, #050505);
+  --bg2: var(--app-bg, #0d0d0d);
+  --card: var(--app-card, #141414);
   --surface: rgba(255,255,255,0.05);
   --surface2: rgba(255,255,255,0.08);
   --border: rgba(255,255,255,0.08);
   --border2: rgba(255,255,255,0.14);
-  --orange: #ff7b00;
-  --orange2: #ff9500;
+  --orange: var(--app-primary, #ff7b00);
+  --orange2: var(--app-primary-2, #ff9500);
   --orange-soft: rgba(255, 123, 0, 0.18);
-  --text: #ffffff;
-  --muted: #b8b8b8;
+  --text: var(--app-text, #ffffff);
+  --muted: var(--app-muted, #b8b8b8);
   --danger: #ef4444;
   --success: #22c55e;
   --warning: #f59e0b;

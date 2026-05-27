@@ -1,0 +1,52 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Redes Sociais | ZYRO CODE</title>
+  <link rel="stylesheet" href="redes-sociais.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <main class="config-page">
+    <header class="config-header">
+      <button id="btnBack" class="icon-btn" aria-label="Voltar">←</button>
+      <div>
+        <p class="section-label">Redes Sociais</p>
+        <h1 data-i18n="social.title">Conecte suas contas</h1>
+        <p class="section-description">Gerencie perfis vinculados, ativando login social e compartilhamento rápido.</p>
+      </div>
+    </header>
+
+    <section class="config-content">
+      <div class="card">
+        <h2>Contas conectadas</h2>
+        <div class="account-list">
+          <button class="account-button" data-account="facebook">Facebook</button>
+          <button class="account-button" data-account="twitter">Twitter</button>
+          <button class="account-button" data-account="instagram">Instagram</button>
+          <button class="account-button" data-account="google">Google</button>
+          <button class="account-button" data-account="github">GitHub</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Share rápido</h2>
+        <p class="card-text">Ative compartilhamento social para mostrar progresso, conquistas e diplomas.</p>
+        <label class="switch-row">Compartilhamento automático <input type="checkbox" id="autoShare" /></label>
+      </div>
+
+      <div class="card">
+        <h2>Status</h2>
+        <div class="status-list" id="statusList"></div>
+      </div>
+    </section>
+
+    <button class="btn-primary btn-save" id="saveBtn">Salvar redes</button>
+  </main>
+
+  <div id="toast" class="toast" role="status"></div>
+  <script type="module" src="../js/global-preferences.js"></script>
+  <script type="module" src="redes-sociais.js"></script>
+</body>
+</html>

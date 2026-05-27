@@ -1,0 +1,51 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notificações | ZYRO CODE</title>
+  <link rel="stylesheet" href="notificacoes.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <main class="config-page">
+    <header class="config-header">
+      <button id="btnBack" class="icon-btn" aria-label="Voltar">←</button>
+      <div>
+        <p class="section-label">Notificações</p>
+        <h1 data-i18n="notifications.title">Controle o que chega até você</h1>
+        <p class="section-description">Escolha alertas em tempo real, lembretes e silêncio em horários específicos.</p>
+      </div>
+    </header>
+
+    <section class="config-content">
+      <div class="card">
+        <h2>Alertas</h2>
+        <div class="switch-list">
+          <label class="switch-row">Push de mensagens <input type="checkbox" data-key="pushMessages" /></label>
+          <label class="switch-row">E-mail de novidades <input type="checkbox" data-key="emailNews" /></label>
+          <label class="switch-row">Lembretes de aula <input type="checkbox" data-key="lessonReminders" /></label>
+          <label class="switch-row">Atualizações de curso <input type="checkbox" data-key="courseUpdates" /></label>
+          <label class="switch-row">Promoções exclusivas <input type="checkbox" data-key="promoOffers" /></label>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Silêncio</h2>
+        <p class="card-text">Defina um horário em que o app não deve enviar notificações.</p>
+        <div class="inline-fields">
+          <label>Início <input type="time" id="quietStart" /></label>
+          <label>Fim <input type="time" id="quietEnd" /></label>
+        </div>
+      </div>
+
+    </section>
+
+    <button class="btn-primary btn-save" id="saveBtn">Salvar notificações</button>
+  </main>
+
+  <div id="toast" class="toast" role="status"></div>
+  <script type="module" src="../js/global-preferences.js"></script>
+  <script type="module" src="notificacoes.js"></script>
+</body>
+</html>

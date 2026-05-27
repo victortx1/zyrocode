@@ -1,0 +1,55 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacidade | ZYRO CODE</title>
+  <link rel="stylesheet" href="privacidade.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <main class="config-page">
+    <header class="config-header">
+      <button id="btnBack" class="icon-btn" aria-label="Voltar">←</button>
+      <div>
+        <p class="section-label">Privacidade</p>
+        <h1 data-i18n="privacy.title">Seus dados, suas regras</h1>
+        <p class="section-description">Gerencie visibilidade, rastreamento e compartilhamento de informações pessoais.</p>
+      </div>
+    </header>
+
+    <section class="config-content">
+      <div class="card">
+        <h2>Visibilidade</h2>
+        <div class="switch-list">
+          <label class="switch-row">Perfil público <input type="checkbox" data-key="profilePublic" /></label>
+          <label class="switch-row">Resultados visíveis <input type="checkbox" data-key="resultsVisible" /></label>
+          <label class="switch-row">Compartilhar conquistas <input type="checkbox" data-key="shareAchievements" /></label>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Dados e rastreamento</h2>
+        <div class="switch-list">
+          <label class="switch-row">Anúncios personalizados <input type="checkbox" data-key="personalizedAds" /></label>
+          <label class="switch-row">Compartilhar dados <input type="checkbox" data-key="dataSharing" /></label>
+          <label class="switch-row">Localização <input type="checkbox" data-key="locationAccess" /></label>
+          <label class="switch-row">Histórico de atividades <input type="checkbox" data-key="activityHistory" /></label>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Conta segura</h2>
+        <p class="card-text">Use autenticação adicional e controle acessos em dispositivos confiáveis.</p>
+        <button id="manageSecurity" class="secondary-button">Abrir configurações de segurança</button>
+      </div>
+    </section>
+
+    <button class="btn-primary btn-save" id="saveBtn">Salvar privacidade</button>
+  </main>
+
+  <div id="toast" class="toast" role="status"></div>
+  <script type="module" src="../js/global-preferences.js"></script>
+  <script type="module" src="privacidade.js"></script>
+</body>
+</html>

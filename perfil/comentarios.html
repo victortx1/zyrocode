@@ -1,0 +1,51 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Comentários | ZYRO CODE</title>
+  <link rel="stylesheet" href="comentarios.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <main class="config-page">
+    <header class="config-header">
+      <button id="btnBack" class="icon-btn" aria-label="Voltar">←</button>
+      <div>
+        <p class="section-label">Comentários</p>
+        <h1 data-i18n="comments.title">Envie sua opinião</h1>
+        <p class="section-description">Fale sobre o app, cursos ou sugestões para melhorar sua experiência.</p>
+      </div>
+    </header>
+
+    <section class="config-content">
+      <div class="card">
+        <h2>Avaliação</h2>
+        <div class="rating-row">
+          <button class="rating-button" data-rating="1">1</button>
+          <button class="rating-button" data-rating="2">2</button>
+          <button class="rating-button" data-rating="3">3</button>
+          <button class="rating-button" data-rating="4">4</button>
+          <button class="rating-button" data-rating="5">5</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Comentário</h2>
+        <textarea id="feedbackText" rows="6" placeholder="Digite sua mensagem..." maxlength="360"></textarea>
+      </div>
+
+      <div class="card summary-card">
+        <span id="selectedRating">Avaliação selecionada: 4</span>
+        <span id="feedbackLength">0 / 360 caracteres</span>
+      </div>
+    </section>
+
+    <button class="btn-primary btn-save" id="submitBtn">Enviar comentário</button>
+  </main>
+
+  <div id="toast" class="toast" role="status"></div>
+  <script type="module" src="../js/global-preferences.js"></script>
+  <script type="module" src="comentarios.js"></script>
+</body>
+</html>

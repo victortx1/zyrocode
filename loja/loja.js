@@ -120,7 +120,7 @@ const ITEMS = {
   ],
   boost: [
     { id: "xp_boost", icon: "⚡", name: "XP x2", desc: "Dobra seu XP por 24h", price: 250, action: "boost_xp" },
-    { id: "coin_boost", icon: "📀", name: "Moedas x2", desc: "Dobra moedas por 24h", price: 200, action: "boost_coin" }
+    { id: "coin_boost", icon: "🪙", name: "Moedas x2", desc: "Dobra moedas por 24h", price: 200, action: "boost_coin" }
   ]
   ,
   banners: [
@@ -165,7 +165,7 @@ function isOwned(item) {
 function isEquipped(item) {
   if (!userData) return false;
   if (item.action === 'char') return userData.personagemSelecionado === item.id;
-  if (item.action === 'banner') return normalizeBannerId(userData.equippedBanner) === item.id;
+  if (item.action === 'banner') return normalizeBannerId(userData.selectedBanner || userData.equippedBanner) === item.id;
   if (item.action === 'avatar') return getSelectedAvatarId(userData) === item.id;
   return false;
 }
@@ -358,9 +358,20 @@ async function handleBuy(itemId, tab) {
     const cloudResult = await purchaseShopItemCloud({ itemId, tab });
     if (cloudResult?.user) {
       applyUserPatch(userData, cloudResult.user);
+      if (item.action === "banner") {
+        userData.selectedBanner = item.id;
+        userData.equippedBanner = item.id;
+        await window.ZyroPrefs?.update?.({ selectedBanner: item.id });
+      }
+      if (item.action === "avatar") {
+        userData.selectedAvatar = item.id;
+        userData.equippedAvatar = item.id;
+        await window.ZyroPrefs?.update?.({ selectedAvatar: item.id });
+      }
       syncCoins();
       renderShop(tab);
       showToast(owned ? `✨ ${item.name} equipado!` : `✅ ${item.name} comprado!`);
+      try { if (typeof window.zyroVibrate === 'function') window.zyroVibrate(); } catch(e){}
       return;
     }
   } catch (error) {
@@ -441,7 +452,10 @@ async function handleBuy(itemId, tab) {
 
     // PASSO 6: Equipar item
     if (item.action === "char") updates.personagemSelecionado = item.id;
-    if (item.action === "banner") updates.equippedBanner = item.id;
+    if (item.action === "banner") {
+      updates.selectedBanner = item.id;
+      updates.equippedBanner = item.id;
+    }
 
     // PASSO 7: Itens consumíveis
     if (item.action === "vidas") {
@@ -503,10 +517,15 @@ async function handleBuy(itemId, tab) {
     }
 
     if (item.action === "char") userData.personagemSelecionado = item.id;
-    if (item.action === "banner") userData.equippedBanner = item.id;
+    if (item.action === "banner") {
+      userData.selectedBanner = item.id;
+      userData.equippedBanner = item.id;
+      await window.ZyroPrefs?.update?.({ selectedBanner: item.id });
+    }
     if (item.action === "avatar") {
       userData.selectedAvatar = item.id;
       userData.equippedAvatar = item.id;
+      await window.ZyroPrefs?.update?.({ selectedAvatar: item.id });
     }
 
     if (item.action === "vidas") userData.vidas = updates.vidas;
@@ -536,6 +555,7 @@ async function handleBuy(itemId, tab) {
     syncCoins();
     renderShop(tab);
     showToast(owned ? `✨ ${item.name} equipado!` : `✅ ${item.name} comprado!`);
+    try { if (typeof window.zyroVibrate === 'function') window.zyroVibrate(); } catch(e){}
 
   } catch (error) {
     console.error("ERRO COMPRA REAL:", error.code, error.message, error);

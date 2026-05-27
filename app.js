@@ -1238,7 +1238,7 @@ async function finishLesson() {
   const resolvedAlreadyDone = cloudResult?.alreadyDone ?? alreadyDone;
   const resolvedXpGain = cloudResult?.xpGain ?? (resolvedAlreadyDone ? 0 : currentLesson.xp);
   const resolvedCoinGain = cloudResult?.coinGain ?? (resolvedAlreadyDone ? 0 : currentLesson.moedas);
-  const resolvedCourseDone = cloudResult?.completedCourseNow ?? completedCourseNow;
+  const resolvedCourseDone = cloudResult?.completedCourseNow ?? completedCourseDone;
 
   if (!resolvedAlreadyDone && !cloudResult?.user) {
     userData.xp = (userData.xp || 0) + resolvedXpGain;
@@ -1313,6 +1313,7 @@ function showVictory(xp, coins, completedCourseNow) {
       : `<div class="reward-chip">Aula já concluída</div>`;
 
   document.getElementById("victoryScreen").classList.remove("hidden");
+  try { if (typeof window.zyroVibrate === 'function') window.zyroVibrate(); } catch (e) {}
   document.getElementById("btnContinue").addEventListener("click", () => {
     document.getElementById("victoryScreen").classList.add("hidden");
   }, { once: true });

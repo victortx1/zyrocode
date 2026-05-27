@@ -1,0 +1,85 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Preferências de Perfil | ZYRO CODE</title>
+  <link rel="stylesheet" href="perfil-config.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <main class="config-page">
+    <header class="config-header">
+      <button id="btnBack" class="icon-btn" aria-label="Voltar">←</button>
+      <div>
+        <p class="section-label">Perfil</p>
+        <h1 data-i18n="profile.preferences_title">Preferências do usuário</h1>
+        <p class="section-description" data-i18n="profile.preferences_desc">Ajuste sua bandeira e acesse a loja para trocar foto ou banner.</p>
+      </div>
+    </header>
+
+    <section class="profile-area">
+      <div class="profile-card profile-banner-card">
+        <div class="profile-banner" id="bannerPreview"></div>
+        <div class="profile-avatar" id="avatarPreview"></div>
+
+        <div class="shop-actions">
+          <a class="shop-link" href="../loja/loja.html#banners">
+            <span class="shop-link-icon">▣</span>
+            <span>Trocar banner</span>
+          </a>
+
+          <a class="shop-link" href="../loja/loja.html#avatars">
+            <span class="shop-link-icon">◉</span>
+            <span>Trocar foto</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="profile-card profile-form-card">
+        <div class="profile-stats" aria-label="Estatísticas do perfil">
+          <div>
+            <span>Nível</span>
+            <strong id="profileLevel">1</strong>
+          </div>
+          <div>
+            <span>XP</span>
+            <strong id="profileXp">0</strong>
+          </div>
+          <div>
+            <span>Liga</span>
+            <strong id="profileLeague">Bronze</strong>
+          </div>
+          <div>
+            <span>Seguidores</span>
+            <strong id="profileFollowers">0</strong>
+          </div>
+        </div>
+
+        <label class="input-row">Bandeira
+          <select id="profileFlag"></select>
+        </label>
+
+        <div class="selected-country" id="selectedCountry">
+          <span id="selectedCountryFlag">🌎</span>
+          <div>
+            <strong id="selectedCountryName">Escolha seu país</strong>
+            <small>Esta bandeira aparece no perfil principal e nas estatísticas.</small>
+          </div>
+        </div>
+
+        <div class="profile-meta">
+          <span>UID: <strong id="profileUid">guest</strong></span>
+          <span>Entrada: <strong id="profileJoined">--</strong></span>
+        </div>
+      </div>
+    </section>
+
+    <button class="btn-save" id="saveBtn">Salvar preferências</button>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="../js/global-preferences.js"></script>
+  <script type="module" src="perfil-config.js"></script>
+</body>
+</html>

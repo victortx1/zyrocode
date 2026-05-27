@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="">
 <head>
   <meta charset="UTF-8" />
@@ -16,7 +16,7 @@
 
     <div class="topbar-stats">
       <div class="stat" id="statStreak">🔥 <span id="streakVal">0</span></div>
-      <div class="stat" id="statCoins">📀 <span id="coinsVal">0</span></div>
+      <div class="stat" id="statCoins">🪙 <span id="coinsVal">0</span></div>
       <div class="stat" id="statHearts">❤️ <span id="heartsVal">5</span></div>
     </div>
   </header>
@@ -49,19 +49,19 @@
   
   <nav class="bottom-nav">
     <a href="./index.html" class="nav-item active" id="navMap">
-      <span class="nav-icon">🗺️</span><span class="nav-label">Mapa</span>
+      <span class="nav-icon">🗺️</span><span class="nav-label" data-i18n="nav.map">Mapa</span>
     </a>
     <a href="./missoes/missoes.html" class="nav-item">
-      <span class="nav-icon">🎯</span><span class="nav-label">Missões</span>
+      <span class="nav-icon">🎯</span><span class="nav-label" data-i18n="nav.missions">Missões</span>
     </a>
     <a href="./ranking/ranking.html" class="nav-item">
-      <span class="nav-icon">🏆</span><span class="nav-label">Ranking</span>
+      <span class="nav-icon">🏆</span><span class="nav-label" data-i18n="nav.ranking">Ranking</span>
     </a>
     <a href="./loja/loja.html" class="nav-item">
-      <span class="nav-icon">🛒</span><span class="nav-label">Loja</span>
+      <span class="nav-icon">🛒</span><span class="nav-label" data-i18n="nav.shop">Loja</span>
     </a>
     <a href="./perfil/perfil.html" class="nav-item">
-      <span class="nav-icon">👤</span><span class="nav-label">Perfil</span>
+      <span class="nav-icon">👤</span><span class="nav-label" data-i18n="nav.profile">Perfil</span>
     </a>
   </nav>
 
@@ -82,13 +82,7 @@
     </div>
   </div>
 
-  <script src="js/global-preferences.js"></script>
-  <script>
-    // Aplica traduções assim que o DOM carregar
-    document.addEventListener('DOMContentLoaded', () => {
-      ZyroPrefs.applyTranslations();
-    });
-  </script>
+  <script type="module" src="js/global-preferences.js"></script>
   <script type="module" src="app.js"></script>
   <script type="module" src="./guide.js"></script>
 </body>

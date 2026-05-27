@@ -5,7 +5,7 @@ import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase
 const wrap = document.getElementById("achievementsWrap");
 const btnBack = document.getElementById("btnBack");
 
-const ACHIEVEMENT_GROUPS = [
+export const ACHIEVEMENT_GROUPS = [
   {
     title: "Recordes pessoais",
     items: [
@@ -13,43 +13,36 @@ const ACHIEVEMENT_GROUPS = [
         id: "novo_membro",
         title: "Novo Membro",
         desc: "Entrou para a comunidade Zyro Code",
-        icon: "⚡",
-        // Para usar uma imagem própria, coloque o caminho aqui. Ex: "../assets/conquistas/novo-membro.png"
         image: "../assets/conquistas/raposa.webp"
       },
       {
         id: "first_step",
         title: "Primeiro Passo",
         desc: "Complete sua primeira aula",
-        icon: "🧑‍💻",
         image: "../assets/conquistas/r2.webp"
       },
       {
         id: "explorer",
         title: "Explorador",
         desc: "Complete 5 aulas",
-        icon: "🤠",
         image: "../assets/conquistas/r3.png"
       },
       {
         id: "on_fire",
         title: "Fogo!",
         desc: "Mantenha 7 dias de sequência",
-        icon: "🔥",
         image: "../assets/conquistas/r4.webp"
       },
       {
         id: "dedicated",
         title: "Dedicado",
         desc: "Complete 20 aulas",
-        icon: "🏆",
         image: "../assets/conquistas/r5.webp"
       },
       {
         id: "xp_strong",
         title: "XP Forte",
         desc: "Alcance 1000 XP",
-        icon: "⚡",
         image: "../assets/conquistas/r6.webp"
       }
     ]
@@ -61,51 +54,50 @@ const ACHIEVEMENT_GROUPS = [
         id: "html_master",
         title: "Mestre HTML",
         desc: "Termine o módulo HTML",
-        icon: "🌐",
         image: "../assets/conquistas/r7.webp"
       },
       {
         id: "css_artist",
         title: "Artista CSS",
         desc: "Termine o módulo CSS",
-        icon: "🎨",
         image: "../assets/conquistas/r8.webp"
       },
       {
         id: "js_spark",
         title: "Faísca JS",
         desc: "Termine o módulo JavaScript",
-        icon: "✨",
         image: "../assets/conquistas/r9.webp"
       },
       {
         id: "mission_runner",
         title: "Corredor de Missões",
         desc: "Complete 10 missões",
-        icon: "🎯",
         image: "../assets/conquistas/r10.webp"
       },
       {
         id: "league_climber",
         title: "Subiu de Liga",
         desc: "Alcance uma liga nova",
-        icon: "🥇",
         image: "../assets/conquistas/r11.webp"
       },
       {
         id: "zyro_legend",
         title: "Lenda Zyro",
         desc: "Alcance 10000 XP",
-        icon: "👑",
         image: "../assets/conquistas/r12.webp"
       }
     ]
   }
 ];
 
-btnBack.onclick = () => {
-  window.location.href = "perfil.html";
-};
+window.ZYRO_ACHIEVEMENT_GROUPS = ACHIEVEMENT_GROUPS;
+window.ZyroPrefs?.registerAchievements?.(ACHIEVEMENT_GROUPS);
+
+if (btnBack) {
+  btnBack.onclick = () => {
+    window.location.href = "perfil.html";
+  };
+}
 
 function escapeHtml(value = "") {
   return String(value)
@@ -122,12 +114,12 @@ function getArtHtml(item) {
       <img
         src="${escapeHtml(item.image)}"
         alt="${escapeHtml(item.title)}"
-        onerror="this.replaceWith(Object.assign(document.createElement('span'), { className: 'achievement-icon-fallback', textContent: '${escapeHtml(item.icon)}' }))"
+        onerror="this.closest('.achievement-art').classList.add('image-error')"
       />
     `;
   }
 
-  return `<span class="achievement-icon-fallback">${item.icon}</span>`;
+  return `<span class="achievement-icon-fallback">?</span>`;
 }
 
 function renderAchievements(userAchievements = {}) {
@@ -158,7 +150,7 @@ function renderAchievements(userAchievements = {}) {
   `).join("");
 }
 
-onAuthStateChanged(auth, async (user) => {
+if (wrap) onAuthStateChanged(auth, async (user) => {
   try {
     const isGuest = localStorage.getItem("zyroGuest") === "true";
 

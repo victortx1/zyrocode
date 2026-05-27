@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -11,7 +11,7 @@
 </head>
 <body>
   <header class="topbar">
-    <a href="../index.html" class="back-btn">← Voltar</a>
+    <a href="../index.html" class="back-btn" data-i18n="common.back">? Voltar</a>
     <div class="topbar-brand">⚡ <span>ZYRO</span>CODE</div>
     <div style="width:60px"></div>
   </header>
@@ -19,8 +19,8 @@
   <main class="page-wrap missions-page">
     <section class="missions-header">
       <div>
-        <h1 class="section-title">🎯 Missões Diárias</h1>
-        <p class="text-muted">Resetam todo dia à meia-noite</p>
+        <h1 class="section-title" data-i18n="missions.title">Missões Diárias</h1>
+        <p class="text-muted" data-i18n="missions.desc">Resetam todo dia à meia-noite</p>
       </div>
       <div class="missions-meta">
         <span id="missionsDay" class="missions-badge">Carregando...</span>
@@ -29,18 +29,19 @@
     </section>
 
     <div class="streak-reminder" id="streakReminder"></div>
-    <div id="missionsList"><div class="skeleton-loader">Carregando...</div></div>
+    <div id="missionsList"><div class="skeleton-loader" data-i18n="common.loading">Carregando...</div></div>
   </main>
 
   <nav class="bottom-nav">
-    <a href="../index.html" class="nav-item"><span class="nav-icon">🗺️</span><span class="nav-label">Mapa</span></a>
-    <a href="../missoes/missoes.html" class="nav-item active" id="navMissions"><span class="nav-icon">🎯</span><span class="nav-label">Missões</span></a>
-    <a href="../ranking/ranking.html" class="nav-item"><span class="nav-icon">🏆</span><span class="nav-label">Ranking</span></a>
-    <a href="../loja/loja.html" class="nav-item"><span class="nav-icon">🛒</span><span class="nav-label">Loja</span></a>
-    <a href="../perfil/perfil.html" class="nav-item"><span class="nav-icon">👤</span><span class="nav-label">Perfil</span></a>
+    <a href="../index.html" class="nav-item"><span class="nav-icon">🗺️</span><span class="nav-label" data-i18n="nav.map">Mapa</span></a>
+    <a href="../missoes/missoes.html" class="nav-item active" id="navMissions"><span class="nav-icon">🎯</span><span class="nav-label" data-i18n="nav.missions">Missões</span></a>
+    <a href="../ranking/ranking.html" class="nav-item"><span class="nav-icon">🏆</span><span class="nav-label" data-i18n="nav.ranking">Ranking</span></a>
+    <a href="../loja/loja.html" class="nav-item"><span class="nav-icon">🛒</span><span class="nav-label" data-i18n="nav.shop">Loja</span></a>
+    <a href="../perfil/perfil.html" class="nav-item"><span class="nav-icon">👤</span><span class="nav-label" data-i18n="nav.profile">Perfil</span></a>
   </nav>
 
   <script type="module" src="missoes.js"></script>
   <script type="module" src="../guide.js"></script>
+  <script type="module" src="../js/global-preferences.js"></script>
 </body>
 </html>
